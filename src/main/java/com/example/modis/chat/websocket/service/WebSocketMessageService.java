@@ -1,0 +1,43 @@
+package com.example.modis.chat.websocket.service;
+
+import com.example.modis.chat.message.mapper.Mapper;
+import com.example.modis.chat.message.model.Message;
+import com.example.modis.chat.message.service.MessageService;
+import com.example.modis.chat.redis.RedisMessagePublisher;
+import com.example.modis.chat.message.dto.MessageDTO;
+import com.example.modis.notification.dto.NotificationDTO;
+import com.example.modis.notification.rabbit.NotificationProducer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class WebSocketMessageService {
+    private final RedisMessagePublisher redisPublisher;
+    private final MessageService messageService;
+    private final Mapper mapper;
+    private final NotificationProducer notificationProducer;
+
+    public void sendMessageToUser(MessageDTO dto) {
+        Message message = mapper.toEntity(dto);
+
+        Message savedMessage = messageService.save(message);
+        MessageDTO responseDTO = mapper.toDTO(savedMessage);
+
+        //publish to redis topic
+        redisPublisher.publish(responseDTO);
+        log.info("Sent message to User: {}", responseDTO.getSenderId());
+
+        //Send notification to receiver
+        log.info("Notified User: {}", responseDTO.getReceiverId());
+        NotificationDTO notificationDTO = NotificationDTO.builder()
+                .userId(dto.getSenderId())
+                .targetId(dto.getReceiverId())
+                .content(dto.getContent())
+                .notificationType("MESSAGE")
+                .build();
+        notificationProducer.sendNotification(notificationDTO);
+    }
+}
