@@ -1,6 +1,6 @@
 package com.example.modis.chat.redis;
 
-import com.example.modis.chat.message.mapper.Mapper;
+import com.example.modis.chat.message.mapper.ChatMessageMapper;
 import com.example.modis.chat.message.model.Message;
 import com.example.modis.chat.message.dto.MessageDTO;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RedisMessageSubscriber {
     private final SimpMessageSendingOperations messagingTemplate;
-    private final Mapper mapper;
+    private final ChatMessageMapper chatMessageMapper;
 
     public void onMessage(Message message) {
         try {
-            MessageDTO messageDTO = mapper.toDTO(message);
+            MessageDTO messageDTO = chatMessageMapper.toDTO(message);
             log.info("Received message from Redis: {}", messageDTO.getSenderId(), messageDTO.getReceiverId());
 
             messagingTemplate.convertAndSendToUser(messageDTO.getReceiverId(), "/queue/messages", messageDTO);

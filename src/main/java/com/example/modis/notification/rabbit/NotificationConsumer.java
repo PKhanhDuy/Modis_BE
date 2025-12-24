@@ -1,7 +1,7 @@
 package com.example.modis.notification.rabbit;
 
 import com.example.modis.notification.dto.NotificationDTO;
-import com.example.modis.notification.mapper.Mapper;
+import com.example.modis.notification.mapper.NotificationMapper;
 import com.example.modis.notification.model.Notification;
 import com.example.modis.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationConsumer {
-    private final Mapper mapper;
+    private final NotificationMapper notificationMapper;
     private final NotificationService service;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void receiveMessage(NotificationDTO dto) {
         log.info("Received Message from Notification Queue");
-        Notification notification = mapper.toEntity(dto);
+        Notification notification = notificationMapper.toEntity(dto);
         service.save(notification);
 
         try {

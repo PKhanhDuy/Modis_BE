@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 
 @Component
-public class Mapper {
+public class ChatMessageMapper {
     public Message toEntity(MessageDTO dto) {
         if (dto == null) {
             return null;
