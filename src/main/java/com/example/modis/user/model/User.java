@@ -1,36 +1,29 @@
 package com.example.modis.user.model;
 
 import com.example.modis.user.enumm.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Getter
-@Setter
+import java.time.LocalDateTime;
+import java.util.Date;
+
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection ="users")
 public class User {
     @Id
-    private String userId;
+    private String id;
     private String username;
-    private String pass;
+    private String password;
+    private String fullname;
     private String mail;
-    private String phoneNum;
+    private String sdt;
     private String avatarUrl;
     private Status isActive;
     private Role role;
-
-
-    public User(String userId, String username, String pass, String mail, String phoneNum, String avatarUrl, Status isActive, Role role) {
-        this.userId = userId;
-        this.username = username;
-        this.pass = pass;
-        this.mail = mail;
-        this.phoneNum = phoneNum;
-        this.avatarUrl = avatarUrl;
-        this.isActive = isActive;
-        this.role = role;
-    }
+    private LocalDateTime createdAt;
 }
