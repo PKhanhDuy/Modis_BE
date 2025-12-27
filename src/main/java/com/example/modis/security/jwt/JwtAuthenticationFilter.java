@@ -21,7 +21,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
+        // lan dang nhap dau tien
         if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        try{
             String token = header.substring(7);
 //            String token = header == null ? "" : header.replace("Bearer ", "");
             if (jwtTokenProvider.validateToken(token)) {
@@ -31,7 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        }
+        } catch (Exception e) {
+            // Ghi log lỗi để debug dễ hơn
+            logger.error("Không thể xác thực người dùng: {}");
+            // Tùy chọn: Có thể xóa SecurityContext nếu token lỗi
+            SecurityContextHolder.clearContext();
+            }
         filterChain.doFilter(request, response);
     }
 }
