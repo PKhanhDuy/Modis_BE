@@ -8,9 +8,12 @@ import java.util.Optional;
 
 import com.example.modis.user.model.User;
 import com.example.modis.user.repository.UserRepository;
+import com.example.modis.user.service.UserService;
 import com.example.modis.auth.dto.LoginRequest;
+import com.example.modis.auth.dto.SignUpRequest;
 import com.example.modis.auth.dto.TokenResponse;
-import com.example.modis.security.jwt.JwtTokenProvider; 
+import com.example.modis.security.jwt.JwtTokenProvider;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -19,6 +22,9 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -35,5 +41,17 @@ public class AuthController {
                 return ResponseEntity.ok(new TokenResponse(token));
             }
         }
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Tài khoản hoặc mật khẩu không chính xác");    }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Tài khoản hoặc mật khẩu không chính xác");
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody SignUpRequest signupRequest) {
+        try{
+            User user = userService.registerNewUser(signupRequest);
+            String token = jwtTokenProvider.getSecretToken(user.getId());
+            return ResponseEntity.ok(new TokenResponse(token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
