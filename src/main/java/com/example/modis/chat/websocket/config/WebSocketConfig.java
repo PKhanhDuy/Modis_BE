@@ -1,6 +1,6 @@
 package com.example.modis.chat.websocket.config;
 
-import com.example.modis.chat.message.model.Message;
+// import com.example.modis.chat.message.model.Message;
 import com.example.modis.chat.websocket.interceptor.UserHandshakeHandler;
 import com.example.modis.chat.websocket.interceptor.WebSocketHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
