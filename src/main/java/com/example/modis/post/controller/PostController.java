@@ -1,5 +1,6 @@
 package com.example.modis.post.controller;
 
+import com.example.modis.post.dto.PostFilterRequest;
 import com.example.modis.post.model.Post;
 import com.example.modis.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("api/posts")
 @RequiredArgsConstructor
 public class PostController {
 
@@ -37,17 +38,9 @@ public class PostController {
         return null;
     }
 
-    //Type: Chế độ lọc ảnh (gồm Mine: tôi, FROM_SENDER: lọc từ người gửi khác, ALL: tất cả)
-    //ViewMode: chế độ xem (gồm LIST: xem ở trang chủ, GRID: xem ở trang AllImage
     @GetMapping("/filter")
-    public ResponseEntity<?> filterPosts(
-            @RequestParam String userId,
-            @RequestParam(defaultValue = "ALL") String type,
-            @RequestParam(required = false) String senderId,
-            @RequestParam(defaultValue = "LIST") String viewMode
-    ) {
-        List<?> result = postService.filterAndMapPosts(userId, type, senderId, viewMode);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<?> filterPosts(@ModelAttribute PostFilterRequest request) {
+        return ResponseEntity.ok(postService.filterAndMapPosts(request));
     }
 
 }
