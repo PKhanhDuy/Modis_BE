@@ -66,7 +66,7 @@ public class UserService {
     }
     
     public boolean checkPhoneExits(String phone){
-        if (userRepository.findByPhone(phone).isPresent()) {
+        if (userRepository.findBySdt(phone).isPresent()) {
             return true;
         }
         return false;
