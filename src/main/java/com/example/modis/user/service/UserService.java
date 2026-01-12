@@ -66,7 +66,7 @@ public class UserService {
     }
     
     public boolean checkPhoneExits(String phone){
-        if (userRepository.findByPhone(phone).isPresent()) {
+        if (userRepository.findBySdt(phone).isPresent()) {
             return true;
         }
         return false;
@@ -76,7 +76,6 @@ public class UserService {
         if ( checkUsernameExits(signUpRequest.getUsername())){
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
-
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(signUpRequest.getPassword());
@@ -87,6 +86,7 @@ public class UserService {
         user.setRole(Role.USER); 
         user.setIsActive(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
+        System.out.println("Tai khoan user trước khi" + user.toString());
         return userRepository.save(user);
     }
     
