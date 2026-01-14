@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Document(collection = "images_posts")
 @Data
@@ -16,9 +16,10 @@ import java.util.Date;
 @Builder
 public class Post {
     @Id
+    private String id;
     private String senderId;
     private Receiver receiver;
     private String caption;
     private String urlImage;
-    private Date created_at;
+    private Instant created_at;
 }

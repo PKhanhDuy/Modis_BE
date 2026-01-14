@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -12,9 +12,9 @@ import java.util.Date;
 public class Receiver {
     private String receiverId;
     private String icon;
-    private Date timestamp;
+    private Instant timestamp;
 
-    public Receiver(String receiverId, String icon, Date timestamp) {
+    public Receiver(String receiverId, String icon, Instant timestamp) {
         this.receiverId = receiverId;
         this.icon = icon;
         this.timestamp = timestamp;
