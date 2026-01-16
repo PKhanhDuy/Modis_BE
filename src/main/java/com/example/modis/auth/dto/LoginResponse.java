@@ -1,15 +1,14 @@
 package com.example.modis.auth.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class TokenResponse {
+@AllArgsConstructor
+public class LoginResponse {
     private String token;
-
-    public TokenResponse (String token){
-        this.token = token;
-    }
-
+    private String id;
+    private String username;
 }
