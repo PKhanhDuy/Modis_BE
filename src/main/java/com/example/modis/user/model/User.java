@@ -4,6 +4,7 @@ import com.example.modis.user.enumm.*;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Document(collection ="users")
 public class User {
     @Id
+    @Field("_id")
     private String id;
     private String username;
     private String password;
