@@ -8,13 +8,11 @@ import com.example.modis.post.model.Receiver;
 import com.example.modis.post.repository.PostRepository;
 import com.example.modis.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
 import org.springframework.data.redis.core.RedisTemplate;
-
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -30,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    @Qualifier("postRedisTemplate")
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final UserRepository userRepository;

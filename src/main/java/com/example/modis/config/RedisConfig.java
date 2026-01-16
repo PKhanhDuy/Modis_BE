@@ -1,6 +1,12 @@
 package com.example.modis.config;
 
 import com.example.modis.chat.redis.RedisMessageSubscriber;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -8,13 +14,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
-
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -34,13 +33,29 @@ public class RedisConfig {
         return container;
     }
 
+    //    @Bean
+//    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory,
+//                                                       ObjectMapper objectMapper) {
+//        RedisTemplate<String, Object> template = new RedisTemplate<>();
+//        template.setConnectionFactory(redisConnectionFactory);
+//
+//        template.setKeySerializer(new StringRedisSerializer());
+//
+//        template.setValueSerializer(new GenericJacksonJsonRedisSerializer(objectMapper));
+//
+//        template.setHashKeySerializer(new StringRedisSerializer());
+//        template.setHashValueSerializer(new GenericJacksonJsonRedisSerializer(objectMapper));
+//
+//        return template;
+//    }
+
     @Bean
     public ChannelTopic topic() {
         return new ChannelTopic("chat-channel");
     }
 
-    @Bean
-    public ObjectMapper redisObjectMapper() {
+    @Bean(name = "postObjectMapper")
+    public ObjectMapper postObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -54,15 +69,15 @@ public class RedisConfig {
         return mapper;
     }
 
-    @Bean
+    @Bean(name = "postRedisTemplate")
     public RedisTemplate<String, Object> redisTemplate(
             RedisConnectionFactory connectionFactory,
-            ObjectMapper redisObjectMapper) {
+            @Qualifier("postObjectMapper") ObjectMapper postObjectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         GenericJackson2JsonRedisSerializer serializer =
-                new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+                new GenericJackson2JsonRedisSerializer(postObjectMapper);
 
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
