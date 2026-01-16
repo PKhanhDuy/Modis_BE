@@ -37,16 +37,26 @@ public class PostService {
     private final UserRepository userRepository;
     private final Cloudinary cloudinary;
 
+    public PostDTO toDTO(Post post) {
+        return PostDTO.builder()
+                .id(post.getId())
+                .senderId(post.getSenderId())
+                .receiver(post.getReceiver())
+                .caption(post.getCaption())
+                .urlImage(post.getUrlImage())
+                .created_at(post.getCreated_at())
+                .build();
+    }
+
+
     /* ================= CREATE POST ================= */
 
-    public Post createPost(
+    public PostDTO  createPost(
             String senderId,
             Receiver receiver,
             String caption,
-            String urlImage,
-            Date created_at
+            String urlImage
     ) {
-
         // validate user
         userRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Người gửi không tồn tại"));
@@ -59,7 +69,7 @@ public class PostService {
         String imageUrl = uploadPostImage(senderId, urlImage);
 
         // tạo post
-        Post post = Post.builder()
+        Post newPost = Post.builder()
                 .senderId(senderId)
                 .receiver(receiver)
                 .caption(caption)
@@ -67,20 +77,22 @@ public class PostService {
                 .created_at(new Date().toInstant())
                 .build();
 
-        return postRepository.save(post);
+        Post post = postRepository.save((newPost));
+
+        return toDTO(post);
     }
 
     /* ================= GET ================= */
 
-    public Post getPostBySender(String senderId) {
-        return postRepository.findById(senderId)
+    public Post getPostById(String id) {
+        return postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
     }
 
     /* ================= DELETE ================= */
 
-    public void deletePost(String senderId) {
-        Post post = getPostBySender(senderId);
+    public void deletePost(String id) {
+        Post post = getPostById(id);
         postRepository.delete(post);
     }
 
