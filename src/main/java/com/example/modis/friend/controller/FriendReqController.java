@@ -1,5 +1,6 @@
 package com.example.modis.friend.controller;
 
+import com.example.modis.friend.dto.FriendResponse;
 import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.service.FriendReqService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class FriendReqController {
 
     //    danh sach ban be
     @GetMapping("/list")
-    public List<FriendReq> friends(@RequestParam String userId) {
+    public List<FriendResponse> friends(@RequestParam String userId) {
         return friendReqService.getFriends(userId);
     }
 

@@ -1,7 +1,10 @@
 package com.example.modis.friend.service;
 
+import com.example.modis.friend.dto.FriendResponse;
 import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.repository.FriendReqRepository;
+import com.example.modis.user.model.User;
+import com.example.modis.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +14,39 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FriendReqService {
-    private final FriendReqRepository friendReqRepository;
 
-    // friendList
-    public List<FriendReq> getFriends(String userId) {
-        return friendReqRepository.findByStatusAndSenderIdOrStatusAndReceiverId("accepted", userId, "accepted", userId);
+    private final FriendReqRepository friendReqRepository;
+    private final UserRepository userRepository;
+
+    // danh sách bạn bè
+    public List<FriendResponse> getFriends(String userId) {
+
+        List<FriendReq> list =
+                friendReqRepository.findByStatusAndSenderIdOrStatusAndReceiverId(
+                        "accepted", userId,
+                        "accepted", userId
+                );
+
+        return list.stream().map(req -> {
+
+            // xác định ID người kia
+            String friendId = req.getSenderId().equals(userId)
+                    ? req.getReceiverId()
+                    : req.getSenderId();
+
+            User user = userRepository.findById(friendId)
+                    .orElseThrow(() ->
+                            new RuntimeException("User not found: " + friendId)
+                    );
+
+            return new FriendResponse(
+                    req.getId(),
+                    user.getId(),
+                    user.getUsername(),
+                    user.getFullname()
+            );
+
+        }).toList();
     }
 
     //  received friend requests
