@@ -1,17 +1,15 @@
 package com.example.modis.post.controller;
 
-import com.example.modis.post.dto.PostDTO;
+import com.example.modis.post.dto.PostDto;
+import com.example.modis.post.dto.PostRequest;
 import com.example.modis.post.dto.PostFilterRequest;
 import com.example.modis.post.model.Post;
-import com.example.modis.post.model.Receiver;
 import com.example.modis.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -21,18 +19,13 @@ public class PostController {
 
     private final PostService postService;
 
-    @GetMapping("/pair")
-    public CompletableFuture<ResponseEntity<List<Post>>> getPostBySenderIdAndReceiverId(@RequestParam String senderId, @RequestParam String receiverId){
-        return null;
-    }
-
     @PostMapping("/create")
-    public ResponseEntity<PostDTO> createPost(
-            @RequestBody PostDTO request
+    public ResponseEntity<PostDto> createPost(
+            @RequestBody PostRequest request
     ) {
-        PostDTO postDto = postService.createPost(
+        PostDto postDto = postService.createPost(
                 request.getSenderId(),
-                request.getReceiver(),
+                request.getReceivers(),
                 request.getCaption(),
                 request.getUrlImage()
         );

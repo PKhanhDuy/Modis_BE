@@ -2,9 +2,7 @@ package com.example.modis.post.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.example.modis.post.dto.PostDTO;
-import com.example.modis.post.dto.PostFilterRequest;
-import com.example.modis.post.dto.PostSimpleDTO;
+import com.example.modis.post.dto.*;
 import com.example.modis.post.model.Post;
 import com.example.modis.post.model.Receiver;
 import com.example.modis.post.repository.PostRepository;
@@ -37,23 +35,21 @@ public class PostService {
     private final UserRepository userRepository;
     private final Cloudinary cloudinary;
 
-    public PostDTO toDTO(Post post) {
-        return PostDTO.builder()
-                .id(post.getId())
+    public PostDto toDTO(Post post) {
+        return PostDto.builder()
                 .senderId(post.getSenderId())
-                .receiver(post.getReceiver())
+                .receivers(post.getReceivers())
                 .caption(post.getCaption())
                 .urlImage(post.getUrlImage())
                 .created_at(post.getCreated_at())
                 .build();
     }
 
-
     /* ================= CREATE POST ================= */
 
-    public PostDTO  createPost(
+    public PostDto createPost(
             String senderId,
-            Receiver receiver,
+            List<Receiver> receivers,
             String caption,
             String urlImage
     ) {
@@ -67,11 +63,12 @@ public class PostService {
 
         // upload ảnh
         String imageUrl = uploadPostImage(senderId, urlImage);
+//        String imageUrl = urlImage;
 
         // tạo post
         Post newPost = Post.builder()
                 .senderId(senderId)
-                .receiver(receiver)
+                .receivers(receivers)
                 .caption(caption)
                 .urlImage(imageUrl)
                 .created_at(new Date().toInstant())
@@ -121,11 +118,11 @@ public class PostService {
             throw new RuntimeException("Upload ảnh post thất bại", e);
         }
     }
-    private PostDTO mapToFullDTO(Post post) {
-        return PostDTO.builder()
+    private PostResponse mapToFullDTO(Post post) {
+        return PostResponse.builder()
                 .id(post.getId())
                 .senderId(post.getSenderId())
-                .receiver(post.getReceiver())
+                .receivers(post.getReceivers())
                 .caption(post.getCaption())
                 .urlImage(post.getUrlImage())
                 .created_at(post.getCreated_at())
