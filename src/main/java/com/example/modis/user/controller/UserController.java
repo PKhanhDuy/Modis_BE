@@ -1,6 +1,4 @@
 package com.example.modis.user.controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.example.modis.user.dto.UpdateMailRequest;
 import com.example.modis.user.dto.UpdatePwdRequest;
@@ -10,12 +8,14 @@ import com.example.modis.user.dto.UpdateUserRoleRequest;
 import com.example.modis.user.dto.UserResponse;
 import com.example.modis.user.model.User;
 import com.example.modis.user.service.UserService;
-
 import java.io.IOException;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 
 @RestController
@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 public class UserController {
     @Autowired
     private UserService userService;
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable String id) {
