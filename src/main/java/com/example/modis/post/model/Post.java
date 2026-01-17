@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
 
 @Document(collection = "images_posts")
 @Data
@@ -18,7 +19,7 @@ public class Post {
     @Id
     private String id;
     private String senderId;
-    private Receiver receiver;
+    private List<Receiver> receivers;
     private String caption;
     private String urlImage;
     private Instant created_at;
