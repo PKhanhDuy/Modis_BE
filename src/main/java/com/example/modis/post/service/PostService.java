@@ -1,10 +1,12 @@
 package com.example.modis.post.service;
 
-import com.example.modis.post.dto.PostDTO;
-import com.example.modis.post.dto.PostFilterRequest;
-import com.example.modis.post.dto.PostSimpleDTO;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.example.modis.post.dto.*;
 import com.example.modis.post.model.Post;
+import com.example.modis.post.model.Receiver;
 import com.example.modis.post.repository.PostRepository;
+import com.example.modis.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +14,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -25,15 +31,97 @@ public class PostService {
     @Qualifier("postRedisTemplate")
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public Post save(Post post) {
-        return postRepository.save(post);
+    private final UserRepository userRepository;
+    private final Cloudinary cloudinary;
+
+    public PostDto toDTO(Post post) {
+        return PostDto.builder()
+                .senderId(post.getSenderId())
+                .receivers(post.getReceivers())
+                .caption(post.getCaption())
+                .urlImage(post.getUrlImage())
+                .created_at(post.getCreated_at())
+                .build();
     }
 
-    private PostDTO mapToFullDTO(Post post) {
-        return PostDTO.builder()
+    /* ================= CREATE POST ================= */
+
+    public PostDto createPost(
+            String senderId,
+            List<Receiver> receivers,
+            String caption,
+            String urlImage
+    ) {
+        // validate user
+        userRepository.findById(senderId)
+                .orElseThrow(() -> new RuntimeException("Người gửi không tồn tại"));
+
+        if (urlImage == null || urlImage.isEmpty()) {
+            throw new IllegalArgumentException("Ảnh bài post không hợp lệ");
+        }
+
+        // upload ảnh
+        String imageUrl = uploadPostImage(senderId, urlImage);
+//        String imageUrl = urlImage;
+
+        // tạo post
+        Post newPost = Post.builder()
+                .senderId(senderId)
+                .receivers(receivers)
+                .caption(caption)
+                .urlImage(imageUrl)
+                .created_at(new Date().toInstant())
+                .build();
+
+        Post post = postRepository.save((newPost));
+
+        return toDTO(post);
+    }
+
+    /* ================= GET ================= */
+
+    public Post getPostById(String id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
+    }
+
+    /* ================= DELETE ================= */
+
+    public void deletePost(String id) {
+        Post post = getPostById(id);
+        postRepository.delete(post);
+    }
+
+    /* ================= IMAGE UPLOAD ================= */
+
+    private String uploadPostImage(String senderId, String image) {
+
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                    image.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "Modis/posts/" + senderId,
+                            "public_id", senderId + "_post",
+                            "overwrite", true
+                    )
+            );
+
+            Object secureUrl = uploadResult.get("secure_url");
+            if (secureUrl == null) {
+                throw new RuntimeException("Cloudinary không trả về URL ảnh");
+            }
+
+            return secureUrl.toString();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Upload ảnh post thất bại", e);
+        }
+    }
+    private PostResponse mapToFullDTO(Post post) {
+        return PostResponse.builder()
                 .id(post.getId())
                 .senderId(post.getSenderId())
-                .receiver(post.getReceiver())
+                .receivers(post.getReceivers())
                 .caption(post.getCaption())
                 .urlImage(post.getUrlImage())
                 .created_at(post.getCreated_at())

@@ -2,6 +2,7 @@ package com.example.modis.user.model;
 
 import com.example.modis.user.enumm.*;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @Field("_id")
-    private String id;
+    private ObjectId id;
     private String username;
     private String password;
     private String fullname;

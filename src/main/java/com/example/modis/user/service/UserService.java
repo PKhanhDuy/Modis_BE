@@ -51,7 +51,7 @@ public class UserService {
 
     // Chuyển đổi từ Entity sang DTO
     UserResponse userDTO = new UserResponse();
-    userDTO.setId(user.getId());
+    userDTO.setId(user.getId().toHexString());
     userDTO.setUsername(user.getUsername());
     userDTO.setSdt(user.getSdt());
     userDTO.setAvatarUrl(user.getAvatarUrl());

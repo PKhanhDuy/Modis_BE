@@ -21,6 +21,7 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     List<User> findAll();
 
+
     long countByIsActive(Status status);
 
     List<User> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
