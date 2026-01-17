@@ -1,17 +1,5 @@
 package com.example.modis.auth.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import com.example.modis.user.model.User;
-import com.example.modis.user.repository.UserRepository;
-import com.example.modis.user.service.UserService;
 import com.example.modis.auth.dto.LoginRequest;
 import com.example.modis.auth.dto.LoginResponse;
 import com.example.modis.auth.dto.SignUpRequest;
@@ -63,10 +51,10 @@ public class AuthController {
             User user = userService.registerNewUser(signupRequest);
             String token = jwtTokenProvider.getSecretToken(user.getId());
             System.out.println("Da dang ki thanh cong");
-            return ResponseEntity.ok(new SignupResponse(token, user.getId().toHexString(), user.getUsername()));
+            return ResponseEntity.ok(new SignupResponse(token, user.getId(), user.getUsername()));
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
+            error.put("message", e.getMessage()); 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
