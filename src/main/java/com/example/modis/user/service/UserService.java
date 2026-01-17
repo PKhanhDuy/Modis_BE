@@ -2,7 +2,10 @@ package com.example.modis.user.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.modis.auth.dto.LoginRequest;
+import com.example.modis.auth.dto.LoginResponse;
 import com.example.modis.auth.dto.SignUpRequest;
+import com.example.modis.security.jwt.JwtTokenProvider;
 import com.example.modis.user.dto.UserResponse;
 import com.example.modis.user.enumm.Role;
 import com.example.modis.user.enumm.Status;
@@ -12,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,7 +34,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
     private Cloudinary cloudinary;
+    private final PasswordEncoder passwordEncoder;
 
     public User insert(User user) {
         log.info("Inserting user: {}", user.getUsername());
@@ -49,13 +59,15 @@ public class UserService {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-    // Chuyển đổi từ Entity sang DTO
-    UserResponse userDTO = new UserResponse();
-    userDTO.setId(user.getId().toHexString());
-    userDTO.setUsername(user.getUsername());
-    userDTO.setSdt(user.getSdt());
-    userDTO.setAvatarUrl(user.getAvatarUrl());
-    return userDTO;
+        // Chuyển đổi từ Entity sang DTO
+        UserResponse userDTO = new UserResponse();
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setFullname(user.getFullname());
+        userDTO.setSdt(user.getSdt());
+        userDTO.setMail(user.getMail());
+        userDTO.setAvatarUrl(user.getAvatarUrl());
+        return userDTO;
     }
 
     public boolean checkUsernameExits(String username){
@@ -63,6 +75,19 @@ public class UserService {
             return true;
         }
         return false;
+    }
+
+    public LoginResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu không chính xác!");
+        }
+        if (user.getIsActive() == Status.INACTIVE) {
+            throw new RuntimeException("Tài khoản đã bị khóa!");
+        }
+        String token = jwtTokenProvider.getSecretToken(user.getId());
+        return new LoginResponse(token, user.getId(), user.getUsername());
     }
     
     public boolean checkPhoneExits(String phone){
@@ -76,9 +101,10 @@ public class UserService {
         if ( checkUsernameExits(signUpRequest.getUsername())){
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
+        String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
-        user.setPassword(signUpRequest.getPassword());
+        user.setPassword(encodedPassword);
         user.setFullname(signUpRequest.getFullname());
         user.setMail(signUpRequest.getMail());
         user.setSdt(signUpRequest.getSdt());
@@ -122,6 +148,22 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateMail(String userId, String mail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+        if (mail == null || mail.trim().isEmpty()) {
+            throw new RuntimeException("SDT không hợp lệ");
+        }
+        
+        if (checkPhoneExits(mail)){
+            throw new RuntimeException("SDT đã được sử dụng");
+        }
+
+        user.setMail(mail.trim());
+        return userRepository.save(user);
+    }
+
     public User deleteUser(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -139,32 +181,45 @@ public class UserService {
         return user;
     }
 
-    public String updateAvatar(String id, MultipartFile avatar) {
-    // 1. Kiểm tra đầu vào - Ném Exception nếu lỗi
-    if (avatar == null || avatar.isEmpty()) {
-        throw new IllegalArgumentException("File ảnh rỗng hoặc không tồn tại");
-    }
-    // 2. Cấu hình Cloudinary
-    Map<?, ?> options = ObjectUtils.asMap(
-        "folder", "Modis/avatars",
-        "public_id", id + "_avatar",
-        "overwrite", true
-    );
-    try {
-        // 3. Upload và lấy URL
-        Map<?, ?> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), options);
-        Object secureUrl = uploadResult.get("secure_url");
-        if (secureUrl == null) {
-            throw new RuntimeException("Cloudinary không trả về URL");
+    public String updateAvatar(String id, MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                throw new RuntimeException("File ảnh rỗng hoặc không tồn tại");
+            }
+            
+            Map options = ObjectUtils.asMap("folder", "Modis");
+
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+            String secureUrl = (String) uploadResult.get("secure_url");
+
+            if (secureUrl == null) {
+                throw new RuntimeException("Upload lên Cloudinary thất bại");
+            }
+
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            
+            user.setAvatarUrl(secureUrl);
+            userRepository.save(user);
+
+            return secureUrl;
+        } catch (IOException e) {
+            log.error("Lỗi upload ảnh: {}", e.getMessage());
+            throw new RuntimeException("Lỗi hệ thống khi upload ảnh");
         }
-        // 4. Cập nhật Database
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        user.setAvatarUrl(secureUrl.toString());
-        userRepository.save(user);
-        return secureUrl.toString();
-    } catch (IOException e) {
-        throw new RuntimeException("Lỗi khi đọc file ảnh", e);
     }
+
+    public void changePassword(String userId, String oldPass, String newPass) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        if (!passwordEncoder.matches(oldPass, user.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+        }
+        if (passwordEncoder.matches(newPass, user.getPassword())) {
+            throw new RuntimeException("Mật khẩu mới không được giống mật khẩu cũ!");
+        }
+        user.setPassword(passwordEncoder.encode(newPass));
+        userRepository.save(user);
+        log.info("Người dùng {} đã đổi mật khẩu thành công", user.getUsername());
     }
 }

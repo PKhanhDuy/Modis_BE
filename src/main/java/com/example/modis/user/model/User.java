@@ -4,6 +4,7 @@ import com.example.modis.user.enumm.*;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -23,7 +24,10 @@ public class User {
     private String password;
     private String fullname;
     private String mail;
+
+    @Indexed(unique = true)
     private String sdt;
+    
     private String avatarUrl;
     private Status isActive;
     private Role role;
