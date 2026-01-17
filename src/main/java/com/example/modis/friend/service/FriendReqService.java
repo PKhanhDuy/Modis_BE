@@ -39,7 +39,7 @@ public class FriendReqService {
             String friendId = req.getSenderId().equals(userId)
                     ? req.getReceiverId()
                     : req.getSenderId();
-            log.info("Da lay duoc friendId la " +friendId);
+            log.info("Da lay duoc friendId la " + friendId);
             User user = userRepository.findById(friendId)
                     .orElseThrow(() ->
                             new RuntimeException("User not found: " + friendId)
@@ -99,6 +99,17 @@ public class FriendReqService {
         FriendReq friendReq = friendReqRepository.findById(id).orElseThrow(() -> new RuntimeException("Friend request not found"));
         friendReq.setStatus("rejected");
         return friendReqRepository.save(friendReq);
+    }
+
+    public String getFriendStatus(String userId, String otherUserId) {
+        FriendReq req = friendReqRepository
+                .findBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
+                        userId, otherUserId,
+                        otherUserId, userId
+                );
+
+        if (req == null) return "none";
+        return req.getStatus(); // pending | accepted | rejected
     }
 
     //    huy loi moi ket ban

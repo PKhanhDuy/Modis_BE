@@ -4,9 +4,11 @@ import com.example.modis.friend.dto.FriendResponse;
 import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.service.FriendReqService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -49,6 +51,17 @@ public class FriendReqController {
     @PutMapping("/request/{id}/reject")
     public FriendReq rejectRequest(@PathVariable String id) {
         return friendReqService.rejectRequest(id);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<?> getFriendStatus(@RequestParam String userId,
+                                             @RequestParam String otherUserId) {
+        return ResponseEntity.ok(
+                Map.of(
+                        "status", "success",
+                        "data", friendReqService.getFriendStatus(userId, otherUserId)
+                )
+        );
     }
 
     // huy loi moi ket ban

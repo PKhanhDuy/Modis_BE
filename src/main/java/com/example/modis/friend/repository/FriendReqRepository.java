@@ -17,5 +17,11 @@ public interface FriendReqRepository extends MongoRepository<FriendReq, String> 
     // danh sach ban be
     List<FriendReq> findByStatusAndSenderIdOrStatusAndReceiverId(String status1, String senderId, String status2, String receiverId);
 
+    //check status giữa 2 user
+    FriendReq findBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
+            String sender1, String receiver1,
+            String sender2, String receiver2
+    );
+
     boolean existsBySenderIdAndReceiverId(String senderId, String receiverId);
 }

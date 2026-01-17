@@ -23,13 +23,13 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable String id) {
-    UserResponse userDTO = userService.getUser(id);
-    return ResponseEntity.ok(
-        Map.of(
-            "status", "success",
-            "data", userDTO
-        )
-    );
+        UserResponse userDTO = userService.getUser(id);
+        return ResponseEntity.ok(
+                Map.of(
+                        "status", "success",
+                        "data", userDTO
+                )
+        );
     }
 
     @PutMapping("/{id}/update-username")
@@ -46,11 +46,11 @@ public class UserController {
                 )
         );
     }
-         
+
 
     @PutMapping("/{id}/phone")
     public ResponseEntity<?> updatePhone(@PathVariable String id,
-                                        @RequestBody UpdateUserPhoneRequest request) {
+                                         @RequestBody UpdateUserPhoneRequest request) {
         User updatedUser = userService.updatePhone(id, request.getSdt());
         return ResponseEntity.ok(
                 Map.of(
@@ -76,8 +76,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable String id){
-        User updatedUser = userService.deleteUser(id );
+    public ResponseEntity<?> deleteUser(@PathVariable String id) {
+        User updatedUser = userService.deleteUser(id);
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Đã xóa tài khoản",
@@ -103,6 +103,16 @@ public class UserController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam String q,
+                                         @RequestParam String currentUserId) {
+        return ResponseEntity.ok(
+                Map.of(
+                        "status", "success",
+                        "data", userService.searchUsers(q, currentUserId)
+                )
+        );
+    }
 
 }
 

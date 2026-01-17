@@ -30,6 +30,24 @@ public class UserService {
     @Autowired
     private Cloudinary cloudinary;
 
+    public List<UserResponse> searchUsers(String keyword, String currentUserId) {
+        return userRepository
+                .findByUsernameContainingIgnoreCaseOrFullnameContainingIgnoreCase(keyword, keyword)
+                .stream()
+                .filter(u -> !u.getId().toHexString().equals(currentUserId))
+                .map(u -> {
+                    UserResponse dto = new UserResponse();
+                    dto.setId(u.getId().toHexString());
+                    dto.setUsername(u.getUsername());
+                    dto.setFullname(u.getFullname());
+                    dto.setMail(u.getMail());
+                    dto.setSdt(u.getSdt());
+                    dto.setAvatarUrl(u.getAvatarUrl());
+                    return dto;
+                })
+                .toList();
+    }
+
     public User insert(User user) {
         log.info("Inserting user: {}", user.getUsername());
         return userRepository.insert(user);
@@ -41,39 +59,39 @@ public class UserService {
     }
 
     public User getUserById(String id) {
-    return userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
     }
 
     public UserResponse getUser(String id) {
-    User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-    // Chuyển đổi từ Entity sang DTO
-    UserResponse userDTO = new UserResponse();
-    userDTO.setId(user.getId().toHexString());
-    userDTO.setUsername(user.getUsername());
-    userDTO.setSdt(user.getSdt());
-    userDTO.setAvatarUrl(user.getAvatarUrl());
-    return userDTO;
+        // Chuyển đổi từ Entity sang DTO
+        UserResponse userDTO = new UserResponse();
+        userDTO.setId(user.getId().toHexString());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setSdt(user.getSdt());
+        userDTO.setAvatarUrl(user.getAvatarUrl());
+        return userDTO;
     }
 
-    public boolean checkUsernameExits(String username){
+    public boolean checkUsernameExits(String username) {
         if (userRepository.findByUsername(username).isPresent()) {
             return true;
         }
         return false;
     }
-    
-    public boolean checkPhoneExits(String phone){
+
+    public boolean checkPhoneExits(String phone) {
         if (userRepository.findBySdt(phone).isPresent()) {
             return true;
         }
         return false;
     }
 
-    public User registerNewUser(SignUpRequest signUpRequest){
-        if ( checkUsernameExits(signUpRequest.getUsername())){
+    public User registerNewUser(SignUpRequest signUpRequest) {
+        if (checkUsernameExits(signUpRequest.getUsername())) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
         User user = new User();
@@ -83,13 +101,13 @@ public class UserService {
         user.setMail(signUpRequest.getMail());
         user.setSdt(signUpRequest.getSdt());
 
-        user.setRole(Role.USER); 
+        user.setRole(Role.USER);
         user.setIsActive(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         System.out.println("Tai khoan user trước khi" + user.toString());
         return userRepository.save(user);
     }
-    
+
     public User updateUsername(String userId, String username) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -97,8 +115,8 @@ public class UserService {
         if (username == null || username.trim().isEmpty()) {
             throw new RuntimeException("Tên người dùng không hợp lệ");
         }
-        
-        if ( checkUsernameExits(username)){
+
+        if (checkUsernameExits(username)) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
 
@@ -113,8 +131,8 @@ public class UserService {
         if (phone == null || phone.trim().isEmpty()) {
             throw new RuntimeException("SDT không hợp lệ");
         }
-        
-        if (checkPhoneExits(phone)){
+
+        if (checkPhoneExits(phone)) {
             throw new RuntimeException("SDT đã được sử dụng");
         }
 
@@ -127,12 +145,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         user.setIsActive(Status.INACTIVE);
         return userRepository.save(user);
-    } 
-    
+    }
+
     public User updateRole(String userId, Role role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        if ( user.getRole() != role){
+        if (user.getRole() != role) {
             user.setRole(role);
             return userRepository.save(user);
         }
@@ -140,31 +158,31 @@ public class UserService {
     }
 
     public String updateAvatar(String id, MultipartFile avatar) {
-    // 1. Kiểm tra đầu vào - Ném Exception nếu lỗi
-    if (avatar == null || avatar.isEmpty()) {
-        throw new IllegalArgumentException("File ảnh rỗng hoặc không tồn tại");
-    }
-    // 2. Cấu hình Cloudinary
-    Map<?, ?> options = ObjectUtils.asMap(
-        "folder", "Modis/avatars",
-        "public_id", id + "_avatar",
-        "overwrite", true
-    );
-    try {
-        // 3. Upload và lấy URL
-        Map<?, ?> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), options);
-        Object secureUrl = uploadResult.get("secure_url");
-        if (secureUrl == null) {
-            throw new RuntimeException("Cloudinary không trả về URL");
+        // 1. Kiểm tra đầu vào - Ném Exception nếu lỗi
+        if (avatar == null || avatar.isEmpty()) {
+            throw new IllegalArgumentException("File ảnh rỗng hoặc không tồn tại");
         }
-        // 4. Cập nhật Database
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        user.setAvatarUrl(secureUrl.toString());
-        userRepository.save(user);
-        return secureUrl.toString();
-    } catch (IOException e) {
-        throw new RuntimeException("Lỗi khi đọc file ảnh", e);
-    }
+        // 2. Cấu hình Cloudinary
+        Map<?, ?> options = ObjectUtils.asMap(
+                "folder", "Modis/avatars",
+                "public_id", id + "_avatar",
+                "overwrite", true
+        );
+        try {
+            // 3. Upload và lấy URL
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(avatar.getBytes(), options);
+            Object secureUrl = uploadResult.get("secure_url");
+            if (secureUrl == null) {
+                throw new RuntimeException("Cloudinary không trả về URL");
+            }
+            // 4. Cập nhật Database
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            user.setAvatarUrl(secureUrl.toString());
+            userRepository.save(user);
+            return secureUrl.toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi đọc file ảnh", e);
+        }
     }
 }
