@@ -17,6 +17,7 @@ public class FriendReqController {
     //    danh sach ban be
     @GetMapping("/list")
     public List<FriendResponse> friends(@RequestParam String userId) {
+        System.out.println("Da lay danh sach bab be thanh cong");
         return friendReqService.getFriends(userId);
     }
 

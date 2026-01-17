@@ -60,7 +60,7 @@ public class AuthController {
                   
                     // 3. Trả về Token dưới dạng JSON DTO
                     System.out.println("Da dang nhap thanh cong");
-                    return ResponseEntity.ok(new LoginResponse(token, user.getId(), user.getUsername()));
+                    return ResponseEntity.ok(new LoginResponse(token, user.getId().toHexString(), user.getUsername()));
                 }
                 Map<String, String> error = new HashMap<>();
                 error.put("message", "Account not exist");
@@ -83,7 +83,7 @@ public class AuthController {
             User user = userService.registerNewUser(signupRequest);
             String token = jwtTokenProvider.getSecretToken(user.getId());
             System.out.println("Da dang ki thanh cong");
-            return ResponseEntity.ok(new SignupResponse(token, user.getId(), user.getUsername()));
+            return ResponseEntity.ok(new SignupResponse(token, user.getId().toHexString(), user.getUsername()));
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
