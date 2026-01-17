@@ -3,6 +3,7 @@ package com.example.modis.user.model;
 import com.example.modis.user.enumm.*;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,10 @@ public class User {
     private String password;
     private String fullname;
     private String mail;
+
+    @Indexed(unique = true)
     private String sdt;
+    
     private String avatarUrl;
     private Status isActive;
     private Role role;
