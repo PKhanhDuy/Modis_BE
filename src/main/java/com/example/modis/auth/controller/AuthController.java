@@ -74,8 +74,6 @@ public class AuthController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
-        return null;// missing
-    }
 
 
     @PostMapping("/register")

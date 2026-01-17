@@ -45,4 +45,9 @@ public class PostController {
         return ResponseEntity.ok(postService.filterAndMapPosts(request));
     }
 
+    @GetMapping("/redis/{id}")
+    public ResponseEntity<?> getPostDetail(@PathVariable String id) {
+        return ResponseEntity.ok(postService.getPostRedisById(id));
+    }
+
 }

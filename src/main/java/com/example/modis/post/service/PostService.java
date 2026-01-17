@@ -90,6 +90,10 @@ public class PostService {
     public void deletePost(String id) {
         Post post = getPostById(id);
         postRepository.delete(post);
+
+        //Xóa post trong Cache redis
+        String redisKey = "post:detail:" + id;
+        redisTemplate.delete(redisKey);
     }
 
     /* ================= IMAGE UPLOAD ================= */
@@ -188,5 +192,21 @@ public class PostService {
         }
 
         return result;
+    }
+
+    //GET POST DETAIL WITH REDIS
+    public PostResponse getPostRedisById(String id) {
+        String redisKey = "post:detail:" + id;
+        PostResponse cachedPost = (PostResponse) redisTemplate.opsForValue().get(redisKey);
+        if (cachedPost != null) {
+            return cachedPost;
+        }
+
+        // Nếu không có trong Redis -> Lấy từ DB
+        Post post = getPostById(id);
+        PostResponse response = mapToFullDTO(post);
+        //Lưu post này vào Redis
+        redisTemplate.opsForValue().set(redisKey, response, 10, TimeUnit.MINUTES);
+        return response;
     }
 }
