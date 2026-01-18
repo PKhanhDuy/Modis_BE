@@ -13,8 +13,8 @@ public class AdminUserStatsController {
 
     private final AdminUserStatsService adminUserStatsService;
 
-    @GetMapping("/users")
-    public UserStatsResponse getUserStats() {
-        return adminUserStatsService.getUserStats();
-    }
+//    @GetMapping("/users")
+//    public UserStatsResponse getUserStats() {
+//        return adminUserStatsService.getUserStats();
+//    }
 }

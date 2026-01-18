@@ -21,37 +21,37 @@ public class AdminUserStatsService {
     private final UserRepository userRepository;
     private final FriendReqRepository friendReqRepository;
 
-    public UserStatsResponse getUserStats() {
-
-        long totalUsers = userRepository.count();
-        long activeUsers = userRepository.countByIsActive(Status.ACTIVE);
-        long inactiveUsers = userRepository.countByIsActive(Status.INACTIVE);
-
-        // chart: 7 ngày gần nhất
-        List<DailyUserStat> dailyStats = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            LocalDateTime start = date.atStartOfDay();
-            LocalDateTime end = date.atTime(23, 59, 59);
-
-            long count = userRepository.findByCreatedAtBetween(start, end).size();
-            dailyStats.add(new DailyUserStat(date.toString(), count));
-        }
-
-        // online (tạm thời mock)
-        long onlineUsers = Math.max(1, activeUsers / 3);
-
-        // engagement: trung bình số bạn
-        long totalFriendRelations = friendReqRepository.count();
-        double avgFriends = totalUsers == 0 ? 0 : (double) totalFriendRelations / totalUsers;
-
-        return new UserStatsResponse(
-                totalUsers,
-                activeUsers,
-                inactiveUsers,
-                dailyStats,
-                onlineUsers,
-                avgFriends
-        );
-    }
+//    public UserStatsResponse getUserStats() {
+//
+//        long totalUsers = userRepository.count();
+//        long activeUsers = userRepository.countByIsActive(Status.ACTIVE);
+//        long inactiveUsers = userRepository.countByIsActive(Status.INACTIVE);
+//
+//        // chart: 7 ngày gần nhất
+//        List<DailyUserStat> dailyStats = new ArrayList<>();
+//        for (int i = 6; i >= 0; i--) {
+//            LocalDate date = LocalDate.now().minusDays(i);
+//            LocalDateTime start = date.atStartOfDay();
+//            LocalDateTime end = date.atTime(23, 59, 59);
+//
+//            long count = userRepository.findByCreatedAtBetween(start, end).size();
+//            dailyStats.add(new DailyUserStat(date.toString(), count));
+//        }
+//
+//        // online (tạm thời mock)
+//        long onlineUsers = Math.max(1, activeUsers / 3);
+//
+//        // engagement: trung bình số bạn
+//        long totalFriendRelations = friendReqRepository.count();
+//        double avgFriends = totalUsers == 0 ? 0 : (double) totalFriendRelations / totalUsers;
+//
+//        return new UserStatsResponse(
+//                totalUsers,
+//                activeUsers,
+//                inactiveUsers,
+//                dailyStats,
+//                onlineUsers,
+//                avgFriends
+//        );
+//    }
 }
