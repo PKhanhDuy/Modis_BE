@@ -96,12 +96,12 @@ public class FriendReqService {
                 friendReq.getReceiverId(),
                 friendReq.getStatus());
 
-        // ✅ chỉ người nhận mới được accept
+        // chỉ người nhận mới được accept
         if (!friendReq.getReceiverId().equals(userId)) {
             throw new RuntimeException("Bạn không có quyền chấp nhận lời mời này");
         }
 
-        // ✅ chỉ accept khi đang pending
+        // chỉ accept khi đang pending
         if (!"pending".equals(friendReq.getStatus())) {
             throw new RuntimeException("Lời mời đã được xử lý");
         }
