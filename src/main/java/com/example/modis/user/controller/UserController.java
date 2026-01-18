@@ -1,18 +1,21 @@
 package com.example.modis.user.controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.example.modis.user.dto.UpdateMailRequest;
+import com.example.modis.user.dto.UpdatePwdRequest;
 import com.example.modis.user.dto.UpdateUserNameRequest;
 import com.example.modis.user.dto.UpdateUserPhoneRequest;
 import com.example.modis.user.dto.UpdateUserRoleRequest;
 import com.example.modis.user.dto.UserResponse;
 import com.example.modis.user.model.User;
 import com.example.modis.user.service.UserService;
-
+import java.io.IOException;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 
 @RestController
@@ -21,14 +24,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable String id) {
-    UserResponse userDTO = userService.getUser(id);
-    return ResponseEntity.ok(
-        Map.of(
-            "status", "success",
-            "data", userDTO
-        )
+        System.out.println("Get profile "+id);
+        UserResponse userDTO = userService.getUser(id);
+        return ResponseEntity.ok(
+                Map.of(
+                "status", "success",
+                "data", userDTO
+                )
     );
     }
 
@@ -48,7 +53,7 @@ public class UserController {
     }
          
 
-    @PutMapping("/{id}/phone")
+    @PutMapping("/{id}/update-phone")
     public ResponseEntity<?> updatePhone(@PathVariable String id,
                                         @RequestBody UpdateUserPhoneRequest request) {
         User updatedUser = userService.updatePhone(id, request.getSdt());
@@ -63,7 +68,23 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}/avatar")
+    
+    @PutMapping("/{id}/update-mail")
+    public ResponseEntity<?> updateMail(@PathVariable String id,
+                                        @RequestBody UpdateMailRequest request) {
+        User updatedUser = userService.updatePhone(id, request.getMail());
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Cập nhật mail thành công",
+                        "data", Map.of(
+                                "message", updatedUser.getId(),
+                                "sdt", updatedUser.getMail()
+                        )
+                )
+        );
+    }
+
+    @PutMapping("/{id}/update-avatar")
     public ResponseEntity<?> updateAvatar(@PathVariable String id,
                                           @RequestParam("avatar") MultipartFile avatar) {
         String secureUrl = userService.updateAvatar(id, avatar);
@@ -75,32 +96,21 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable String id){
-        User updatedUser = userService.deleteUser(id );
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Đã xóa tài khoản",
-                        "data", Map.of(
-                                "message", updatedUser.getId()
+    @PutMapping("/{id}/change-password")
+        public ResponseEntity<?> changePassword(
+                        @PathVariable String id,
+                        @RequestBody UpdatePwdRequest request) {
+                String oldPass = request.getOldPass();
+                String newPass = request.getNewPass();
+                String userId = userService.changePassword(id, oldPass, newPass);
+                return ResponseEntity.ok(
+                        Map.of(
+                                "message", "Đã cập nhật mật khẩu của tài khoản",
+                                "data", Map.of(
+                                        "message", userId
+                                )
                         )
-                )
         );
-    }
-
-    @PutMapping("/{id}/update-role")
-    public ResponseEntity<?> updateRole(@PathVariable String id,
-                                        @RequestBody UpdateUserRoleRequest request) {
-        User updatedUser = userService.updateRole(id, request.getRole());
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Đã cập nhật quyền của tài khoản",
-                        "data", Map.of(
-                                "message", updatedUser.getId(),
-                                "role", updatedUser.getRole()
-                        )
-                )
-        );
-    }
+        }
 }
 

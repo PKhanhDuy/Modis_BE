@@ -10,7 +10,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
 
-    //tim use theo ten
     Optional<User> findByUsername(String username);
 
     Optional<User> findById(String id);
@@ -19,6 +18,5 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     List<User> findAll();
 
-//    boolean save();
 
 }
