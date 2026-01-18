@@ -8,7 +8,7 @@ import org.bson.types.ObjectId;
 @AllArgsConstructor
 public class FriendResponse {
     private String friendReqId;
-    private ObjectId userId;
+    private String userId;
     private String username;
     private String fullname;
 }
