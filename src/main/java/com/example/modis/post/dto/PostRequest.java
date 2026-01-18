@@ -1,27 +1,21 @@
-package com.example.modis.post.model;
+package com.example.modis.post.dto;
 
+import com.example.modis.post.model.Receiver;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
 
-@Document(collection = "images_posts")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Post {
-    @Id
-    private ObjectId id;
+public class PostRequest {
     private String senderId;
     private List<Receiver> receivers;
     private String caption;
     private String urlImage;
-    private Instant created_at;
 }
