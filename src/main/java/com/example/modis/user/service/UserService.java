@@ -55,28 +55,6 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
     }
 
-    public UserResponse getUser(String id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-
-        // Chuyển đổi từ Entity sang DTO
-        UserResponse userDTO = new UserResponse();
-        userDTO.setId(user.getId());
-        userDTO.setUsername(user.getUsername());
-        userDTO.setFullname(user.getFullname());
-        userDTO.setSdt(user.getSdt());
-        userDTO.setMail(user.getMail());
-        userDTO.setAvatarUrl(user.getAvatarUrl());
-        return userDTO;
-    }
-
-    public boolean checkUsernameExits(String username){
-        if (userRepository.findByUsername(username).isPresent()) {
-            return true;
-        }
-        return false;
-    }
-
     public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
@@ -88,13 +66,6 @@ public class UserService {
         }
         String token = jwtTokenProvider.getSecretToken(user.getId());
         return new LoginResponse(token, user.getId(), user.getUsername());
-    }
-
-    public boolean checkPhoneExits(String phone){
-        if (userRepository.findBySdt(phone).isPresent()) {
-            return true;
-        }
-        return false;
     }
 
     public User registerNewUser(SignUpRequest signUpRequest){
@@ -114,6 +85,35 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         System.out.println("Tai khoan user trước khi" + user.toString());
         return userRepository.save(user);
+    }
+    
+    public UserResponse getUser(String id) {
+    User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        // Chuyển đổi từ Entity sang DTO
+        UserResponse userDTO = new UserResponse();
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setFullname(user.getFullname());
+        userDTO.setSdt(user.getSdt());
+        userDTO.setMail(user.getMail());
+        userDTO.setAvatarUrl(user.getAvatarUrl());
+        return userDTO;
+    }
+
+    public boolean checkUsernameExits(String username){
+        if (userRepository.findByUsername(username).isPresent()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean checkPhoneExits(String phone){
+        if (userRepository.findBySdt(phone).isPresent()) {
+            return true;
+        }
+        return false;
     }
 
     public User updateUsername(String userId, String username) {
@@ -164,23 +164,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User deleteUser(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        user.setIsActive(Status.INACTIVE);
-        return userRepository.save(user);
-    }
-
-    public User updateRole(String userId, Role role) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        if ( user.getRole() != role){
-            user.setRole(role);
-            return userRepository.save(user);
-        }
-        return user;
-    }
-
     public String updateAvatar(String id, MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
@@ -209,7 +192,7 @@ public class UserService {
         }
     }
 
-    public void changePassword(String userId, String oldPass, String newPass) {
+    public String changePassword(String userId, String oldPass, String newPass) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         if (!passwordEncoder.matches(oldPass, user.getPassword())) {
@@ -221,5 +204,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPass));
         userRepository.save(user);
         log.info("Người dùng {} đã đổi mật khẩu thành công", user.getUsername());
+        return userId;
     }
 }
