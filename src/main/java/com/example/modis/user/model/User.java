@@ -24,7 +24,7 @@ public class User {
 
     @Indexed(unique = true)
     private String sdt;
-    
+
     private String avatarUrl;
     private Status isActive;
     private Role role;

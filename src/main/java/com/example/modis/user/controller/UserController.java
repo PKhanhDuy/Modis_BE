@@ -31,10 +31,10 @@ public class UserController {
         UserResponse userDTO = userService.getUser(id);
         return ResponseEntity.ok(
                 Map.of(
-                "status", "success",
-                "data", userDTO
+                        "status", "success",
+                        "data", userDTO
                 )
-    );
+        );
     }
 
     @PutMapping("/{id}/update-username")
@@ -51,11 +51,11 @@ public class UserController {
                 )
         );
     }
-         
+
 
     @PutMapping("/{id}/update-phone")
     public ResponseEntity<?> updatePhone(@PathVariable String id,
-                                        @RequestBody UpdateUserPhoneRequest request) {
+                                         @RequestBody UpdateUserPhoneRequest request) {
         User updatedUser = userService.updatePhone(id, request.getSdt());
         return ResponseEntity.ok(
                 Map.of(
@@ -68,7 +68,7 @@ public class UserController {
         );
     }
 
-    
+
     @PutMapping("/{id}/update-mail")
     public ResponseEntity<?> updateMail(@PathVariable String id,
                                         @RequestBody UpdateMailRequest request) {
@@ -110,7 +110,7 @@ public class UserController {
                                         "message", userId
                                 )
                         )
+                )
         );
-        }
+    }
 }
-
