@@ -14,48 +14,60 @@ import java.util.Map;
 @RequestMapping("/api/friends")
 @RequiredArgsConstructor
 public class FriendReqController {
+
     private final FriendReqService friendReqService;
 
-    //    danh sach ban be
+    private void log(String msg) {
+        System.out.println("🔥 [FriendController] " + msg);
+    }
+
+    // danh sach ban be
     @GetMapping("/list")
     public List<FriendResponse> friends(@RequestParam String userId) {
-        System.out.println("Da lay danh sach bab be thanh cong");
+        log("GET /list userId=" + userId);
         return friendReqService.getFriends(userId);
     }
 
-    //    received request
+    // received request
     @GetMapping("/requests/received")
     public List<FriendReq> requestsReceived(@RequestParam String userId) {
+        log("GET /requests/received userId=" + userId);
         return friendReqService.getReceivedRequests(userId);
     }
 
-    //     sent request
+    // sent request
     @GetMapping("/requests/sent")
     public List<FriendReq> requestsSent(@RequestParam String userId) {
+        log("GET /requests/sent userId=" + userId);
         return friendReqService.getSentRequests(userId);
     }
 
-    //    gui loi moi ket ban
+    // gui loi moi ket ban
     @PostMapping("/request")
-    public FriendReq sendRequest(@RequestParam String senderId, @RequestParam String receiverId) {
+    public FriendReq sendRequest(@RequestParam String senderId,
+                                 @RequestParam String receiverId) {
+        log("POST /request senderId=" + senderId + " receiverId=" + receiverId);
         return friendReqService.sendRequest(senderId, receiverId);
     }
 
     // chap nhan loi moi ket ban
     @PutMapping("/request/{id}/accept")
     public FriendReq acceptRequest(@PathVariable String id) {
+        log("PUT /request/" + id + "/accept");
         return friendReqService.acceptRequest(id);
     }
 
-    //    tu choi loi moi ket ban
+    // tu choi loi moi ket ban
     @PutMapping("/request/{id}/reject")
     public FriendReq rejectRequest(@PathVariable String id) {
+        log("PUT /request/" + id + "/reject");
         return friendReqService.rejectRequest(id);
     }
 
     @GetMapping("/status")
     public ResponseEntity<?> getFriendStatus(@RequestParam String userId,
                                              @RequestParam String otherUserId) {
+        log("GET /status userId=" + userId + " otherUserId=" + otherUserId);
         return ResponseEntity.ok(
                 Map.of(
                         "status", "success",
@@ -67,6 +79,7 @@ public class FriendReqController {
     // huy loi moi ket ban
     @DeleteMapping("/request/{id}")
     public void deleteRequest(@PathVariable String id) {
+        log("DELETE /request/" + id);
         friendReqService.deleteRequest(id);
     }
 }
