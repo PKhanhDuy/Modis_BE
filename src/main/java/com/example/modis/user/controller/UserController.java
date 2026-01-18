@@ -96,46 +96,18 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable String id){
-        User updatedUser = userService.deleteUser(id );
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Đã xóa tài khoản",
-                        "data", Map.of(
-                                "message", updatedUser.getId()
-                        )
-                )
-        );
-    }
-
-    @PutMapping("/{id}/update-role")
-    public ResponseEntity<?> updateRole(@PathVariable String id,
-                                        @RequestBody UpdateUserRoleRequest request) {
-        User updatedUser = userService.updateRole(id, request.getRole());
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Đã cập nhật quyền của tài khoản",
-                        "data", Map.of(
-                                "message", updatedUser.getId(),
-                                "role", updatedUser.getRole()
-                        )
-                )
-        );
-    }
-
     @PutMapping("/{id}/change-password")
         public ResponseEntity<?> changePassword(
                         @PathVariable String id,
                         @RequestBody UpdatePwdRequest request) {
                 String oldPass = request.getOldPass();
                 String newPass = request.getNewPass();
-                userService.changePassword(id, oldPass, newPass);
+                String userId = userService.changePassword(id, oldPass, newPass);
                 return ResponseEntity.ok(
                         Map.of(
                                 "message", "Đã cập nhật mật khẩu của tài khoản",
                                 "data", Map.of(
-                                        "message", id
+                                        "message", userId
                                 )
                         )
         );

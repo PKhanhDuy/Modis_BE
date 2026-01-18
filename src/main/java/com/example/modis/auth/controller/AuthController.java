@@ -23,8 +23,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
