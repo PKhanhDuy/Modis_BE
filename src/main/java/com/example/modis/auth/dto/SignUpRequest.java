@@ -12,5 +12,5 @@ public class SignUpRequest {
     private String password;
     private String fullname;
     private String mail;
-    private String sdt;    
+    private String sdt;
 }

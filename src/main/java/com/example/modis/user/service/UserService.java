@@ -69,8 +69,8 @@ public class UserService {
     }
 
     public User getUserById(String id) {
-    return userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
@@ -85,7 +85,7 @@ public class UserService {
         String token = jwtTokenProvider.getSecretToken(user.getId());
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
-
+    
 
     public User registerNewUser(SignUpRequest signUpRequest){
         if ( checkUsernameExits(signUpRequest.getUsername())){
@@ -99,7 +99,7 @@ public class UserService {
         user.setMail(signUpRequest.getMail());
         user.setSdt(signUpRequest.getSdt());
 
-        user.setRole(Role.USER); 
+        user.setRole(Role.USER);
         user.setIsActive(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         System.out.println("Tai khoan user trước khi" + user.toString());
@@ -142,7 +142,7 @@ public class UserService {
         if (username == null || username.trim().isEmpty()) {
             throw new RuntimeException("Tên người dùng không hợp lệ");
         }
-        
+
         if ( checkUsernameExits(username)){
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
@@ -158,7 +158,7 @@ public class UserService {
         if (phone == null || phone.trim().isEmpty()) {
             throw new RuntimeException("SDT không hợp lệ");
         }
-        
+
         if (checkPhoneExits(phone)){
             throw new RuntimeException("SDT đã được sử dụng");
         }
@@ -174,7 +174,7 @@ public class UserService {
         if (mail == null || mail.trim().isEmpty()) {
             throw new RuntimeException("SDT không hợp lệ");
         }
-        
+
         if (checkPhoneExits(mail)){
             throw new RuntimeException("SDT đã được sử dụng");
         }
@@ -188,7 +188,7 @@ public class UserService {
             if (file == null || file.isEmpty()) {
                 throw new RuntimeException("File ảnh rỗng hoặc không tồn tại");
             }
-            
+
             Map options = ObjectUtils.asMap("folder", "Modis");
 
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
@@ -200,7 +200,7 @@ public class UserService {
 
             User user = userRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-            
+
             user.setAvatarUrl(secureUrl);
             userRepository.save(user);
 

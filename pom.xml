@@ -136,6 +136,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
+                    <parameters>true</parameters>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -143,6 +144,7 @@
                             <version>1.18.30</version>
                         </path>
                     </annotationProcessorPaths>
+
                 </configuration>
             </plugin>
         </plugins>
