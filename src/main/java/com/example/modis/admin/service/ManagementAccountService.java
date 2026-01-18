@@ -1,12 +1,22 @@
 package com.example.modis.admin.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.example.modis.admin.DTO.UserRequestDTO;
 import com.example.modis.auth.dto.LoginRequest;
 import com.example.modis.auth.dto.LoginResponse;
 import com.example.modis.security.jwt.JwtTokenProvider;
@@ -29,6 +39,7 @@ public class ManagementAccountService {
     private UserRepository userRepository;
 
     @Autowired
+    private Cloudinary cloudinary;
     private JwtTokenProvider jwtTokenProvider;
 
     public List<User> getAllUsers() {
@@ -69,5 +80,41 @@ public class ManagementAccountService {
         System.out.println("Đã đăng nhập thành công");
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
+    public User updateUser(String id, UserRequestDTO dto, MultipartFile file) throws Exception {
+        // 1. Tìm user - dùng ID từ PathVariable
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception("Không tìm thấy người dùng với ID: " + id));
 
+        // 2. Cập nhật các thông tin text cơ bản
+        user.setFullname(dto.getFullname());
+        user.setSdt(dto.getSdt());
+        user.setMail(dto.getMail());
+        user.setRole(dto.getRole());
+        user.setIsActive(dto.getIsActive());
+
+        // 3. Xử lý upload ảnh (Chỉ thực hiện nếu có file mới được gửi lên)
+        if (file != null && !file.isEmpty()) {
+            try {
+                Map options = ObjectUtils.asMap(
+                    "folder", "Modis",
+                    "resource_type", "auto"
+                );
+
+                Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+                String secureUrl = (String) uploadResult.get("secure_url");
+
+                if (secureUrl != null) {
+                    user.setAvatarUrl(secureUrl);
+                } else {
+                    log.error("Cloudinary trả về secure_url null");
+                }
+            } catch (IOException e) {
+                log.error("Lỗi IO khi upload ảnh lên Cloudinary: {}", e.getMessage());
+                throw new RuntimeException("Không thể xử lý file ảnh");
+            }
+        }
+
+        // 4. Lưu lại toàn bộ thay đổi
+        return userRepository.save(user);
+    }
 }
