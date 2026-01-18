@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserPhoneRequest  {
-    private String sdt;
+public class UpdateMailRequest {
+    private String mail;
 
 }

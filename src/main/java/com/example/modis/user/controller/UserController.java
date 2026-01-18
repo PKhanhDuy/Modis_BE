@@ -1,11 +1,15 @@
 package com.example.modis.user.controller;
 
+import com.example.modis.user.dto.UpdateMailRequest;
+import com.example.modis.user.dto.UpdatePwdRequest;
 import com.example.modis.user.dto.UpdateUserNameRequest;
 import com.example.modis.user.dto.UpdateUserPhoneRequest;
 import com.example.modis.user.dto.UpdateUserRoleRequest;
 import com.example.modis.user.dto.UserResponse;
 import com.example.modis.user.model.User;
 import com.example.modis.user.service.UserService;
+import java.io.IOException;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +27,14 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable String id) {
+        System.out.println("Get profile "+id);
         UserResponse userDTO = userService.getUser(id);
         return ResponseEntity.ok(
                 Map.of(
-                        "status", "success",
-                        "data", userDTO
+                "status", "success",
+                "data", userDTO
                 )
-        );
+    );
     }
 
     @PutMapping("/{id}/update-username")
@@ -46,11 +51,11 @@ public class UserController {
                 )
         );
     }
+         
 
-
-    @PutMapping("/{id}/phone")
+    @PutMapping("/{id}/update-phone")
     public ResponseEntity<?> updatePhone(@PathVariable String id,
-                                         @RequestBody UpdateUserPhoneRequest request) {
+                                        @RequestBody UpdateUserPhoneRequest request) {
         User updatedUser = userService.updatePhone(id, request.getSdt());
         return ResponseEntity.ok(
                 Map.of(
@@ -63,7 +68,23 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}/avatar")
+
+    @PutMapping("/{id}/update-mail")
+    public ResponseEntity<?> updateMail(@PathVariable String id,
+                                        @RequestBody UpdateMailRequest request) {
+        User updatedUser = userService.updatePhone(id, request.getMail());
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Cập nhật mail thành công",
+                        "data", Map.of(
+                                "message", updatedUser.getId(),
+                                "sdt", updatedUser.getMail()
+                        )
+                )
+        );
+    }
+
+    @PutMapping("/{id}/update-avatar")
     public ResponseEntity<?> updateAvatar(@PathVariable String id,
                                           @RequestParam("avatar") MultipartFile avatar) {
         String secureUrl = userService.updateAvatar(id, avatar);
@@ -76,8 +97,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        User updatedUser = userService.deleteUser(id);
+    public ResponseEntity<?> deleteUser(@PathVariable String id){
+        User updatedUser = userService.deleteUser(id );
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Đã xóa tài khoản",
@@ -103,6 +124,22 @@ public class UserController {
         );
     }
 
+    @PutMapping("/{id}/change-password")
+        public ResponseEntity<?> changePassword(
+                        @PathVariable String id,
+                        @RequestBody UpdatePwdRequest request) {
+                String oldPass = request.getOldPass();
+                String newPass = request.getNewPass();
+                userService.changePassword(id, oldPass, newPass);
+                return ResponseEntity.ok(
+                        Map.of(
+                                "message", "Đã cập nhật mật khẩu của tài khoản",
+                                "data", Map.of(
+                                        "message", id
+                                )
+                        )
+        );
+        }
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(@RequestParam String q,
                                          @RequestParam String currentUserId) {

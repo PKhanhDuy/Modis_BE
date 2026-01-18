@@ -35,46 +35,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // System.out.println("Username : " + loginRequest.getUsername());
-        // System.out.println("Password : " + loginRequest.getPassword());
         try {
-            // 1. Tìm user theo username
-            Optional<User> userOptional = userRepository.findByUsername(loginRequest.getUsername());
-
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                if (user.getPassword().equals(loginRequest.getPassword())) {
-                    // 2. Tạo JWT Token nếu mật khẩu đúng
-                    String token = jwtTokenProvider.getSecretToken(user.getId());
-
-                    // 3. Trả về Token dưới dạng JSON DTO
-                    System.out.println("Da dang nhap thanh cong");
-                    return ResponseEntity.ok(new LoginResponse(token, user.getId().toHexString(), user.getUsername()));
-                }
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "Account not exist");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-            }
+            LoginResponse response = userService.login(loginRequest);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // Trả về một Map hoặc Object để phía React Native nhận được JSON { "message": "..." }
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
-//        return null;// missing
-//}
-
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody SignUpRequest signupRequest) {
         System.out.println(signupRequest.toString());
-        try {
+        try{
             User user = userService.registerNewUser(signupRequest);
             String token = jwtTokenProvider.getSecretToken(user.getId());
             System.out.println("Da dang ki thanh cong");
-            return ResponseEntity.ok(new SignupResponse(token, user.getId().toHexString(), user.getUsername()));
+            return ResponseEntity.ok(new SignupResponse(token, user.getId(), user.getUsername()));
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());

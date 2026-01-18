@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserPhoneRequest  {
-    private String sdt;
+public class UpdatePwdRequest {
+    private String oldPass;
+    private String newPass;
 
 }
