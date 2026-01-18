@@ -32,9 +32,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/login").permitAll()
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
 
-//                                .anyRequest().permitAll()
+                                .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

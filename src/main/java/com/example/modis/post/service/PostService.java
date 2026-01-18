@@ -69,16 +69,12 @@ public class PostService {
             throw new IllegalArgumentException("Ảnh bài post không hợp lệ");
         }
 
-        // upload ảnh
-        String imageUrl = uploadPostImage(senderId, urlImage);
-//        String imageUrl = urlImage;
-
         // tạo post
         Post newPost = Post.builder()
                 .senderId(senderId)
                 .receivers(receivers)
                 .caption(caption)
-                .urlImage(imageUrl)
+                .urlImage(urlImage)
                 .created_at(new Date().toInstant())
                 .build();
 
@@ -101,35 +97,35 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    /* ================= IMAGE UPLOAD ================= */
-
-    private String uploadPostImage(String senderId, String image) {
-
-        try {
-            Map<?, ?> uploadResult = cloudinary.uploader().upload(
-                    image.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "Modis/posts/" + senderId,
-                            "public_id", senderId + "_post",
-                            "overwrite", true
-                    )
-            );
-
-            Object secureUrl = uploadResult.get("secure_url");
-            if (secureUrl == null) {
-                throw new RuntimeException("Cloudinary không trả về URL ảnh");
-            }
-
-            return secureUrl.toString();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Upload ảnh post thất bại", e);
-        }
-    }
+//    /* ================= IMAGE UPLOAD ================= */
+//
+//    private String uploadPostImage(String senderId, String image) {
+//
+//        try {
+//            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+//                    image.getBytes(),
+//                    ObjectUtils.asMap(
+//                            "folder", "Modis/posts/" + senderId,
+//                            "public_id", senderId + "_post",
+//                            "overwrite", true
+//                    )
+//            );
+//
+//            Object secureUrl = uploadResult.get("secure_url");
+//            if (secureUrl == null) {
+//                throw new RuntimeException("Cloudinary không trả về URL ảnh");
+//            }
+//
+//            return secureUrl.toString();
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException("Upload ảnh post thất bại", e);
+//        }
+//    }
 
 
     public PostResponse reactToPost(String postId, String receiverId, String icon) {
-
+        System.out.println("Post Id nafy laf "+ postId + " Vaf senderId la " + receiverId );
         Query query = new Query(
                 Criteria.where("_id").is(new ObjectId(postId))
                         .and("receivers.receiverId").is(receiverId)
@@ -143,6 +139,7 @@ public class PostService {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+
         Set<String> userIds = new HashSet<>();
         userIds.add(post.getSenderId());
         if(post.getReceivers() != null) post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));

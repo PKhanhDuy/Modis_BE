@@ -110,7 +110,7 @@ public class UserController {
                                         "message", userId
                                 )
                         )
-                )
-        );
+                );
+
     }
 }
