@@ -46,7 +46,8 @@ public class FriendReqService {
                     req.getId(),
                     user.getId().toString(),
                     user.getUsername(),
-                    user.getFullname()
+                    user.getFullname(),
+                    user.getAvatarUrl()
             );
 
         }).toList();
