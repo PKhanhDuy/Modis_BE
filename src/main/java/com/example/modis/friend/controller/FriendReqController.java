@@ -30,6 +30,7 @@ public class FriendReqController {
         return friendReqService.getFriends(userId);
     }
 
+
     // received request (có senderName)
     @GetMapping("/requests/received")
     public List<FriendReqResponse> requestsReceived(@RequestParam String userId) {

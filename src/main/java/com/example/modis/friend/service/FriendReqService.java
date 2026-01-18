@@ -17,7 +17,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FriendReqService {
-
     private static final Logger log =
             LoggerFactory.getLogger(FriendReqService.class);
 
@@ -106,7 +105,6 @@ public class FriendReqService {
         if (senderId.equals(receiverId)) {
             throw new RuntimeException("Cannot send friend request to yourself");
         }
-
         if (friendReqRepository.existsBySenderIdAndReceiverId(senderId, receiverId)
                 || friendReqRepository.existsBySenderIdAndReceiverId(receiverId, senderId)) {
             throw new RuntimeException("Friend request already exists");
@@ -148,7 +146,6 @@ public class FriendReqService {
         return friendReqRepository.save(friendReq);
     }
 
-    // STATUS
     public String getFriendStatus(String userId, String otherUserId) {
         FriendReq req = friendReqRepository
                 .findBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
