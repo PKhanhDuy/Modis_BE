@@ -18,5 +18,5 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     List<User> findAll();
 
-
+    List<User> findByUsernameContainingIgnoreCaseOrFullnameContainingIgnoreCase(String username, String fullname);
 }
