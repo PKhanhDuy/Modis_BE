@@ -85,11 +85,32 @@ public class FriendReqService {
     }
 
     //    chap nhan loi moi ket ban
-    public FriendReq acceptRequest(String id) {
-        FriendReq friendReq = friendReqRepository.findById(id).orElseThrow(() -> new RuntimeException("Friend request not found"));
+    public FriendReq acceptRequest(String id, String userId) {
+        log.info("Accept request id={} by userId={}", id, userId);
+
+        FriendReq friendReq = friendReqRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+
+        log.info("Found request sender={} receiver={} status={}",
+                friendReq.getSenderId(),
+                friendReq.getReceiverId(),
+                friendReq.getStatus());
+
+        // ✅ chỉ người nhận mới được accept
+        if (!friendReq.getReceiverId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền chấp nhận lời mời này");
+        }
+
+        // ✅ chỉ accept khi đang pending
+        if (!"pending".equals(friendReq.getStatus())) {
+            throw new RuntimeException("Lời mời đã được xử lý");
+        }
+
         friendReq.setStatus("accepted");
+
         return friendReqRepository.save(friendReq);
     }
+
 
     //    tu choi loi moi ket ban
     public FriendReq rejectRequest(String id) {

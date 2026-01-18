@@ -5,6 +5,7 @@ import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.service.FriendReqService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class FriendReqController {
     private final FriendReqService friendReqService;
 
     private void log(String msg) {
-        System.out.println("🔥 [FriendController] " + msg);
+        System.out.println(" [FriendController] " + msg);
     }
 
     // danh sach ban be
@@ -50,11 +51,14 @@ public class FriendReqController {
         return friendReqService.sendRequest(senderId, receiverId);
     }
 
-    // chap nhan loi moi ket ban
+    //chap nhan
     @PutMapping("/request/{id}/accept")
     public FriendReq acceptRequest(@PathVariable String id) {
-        log("PUT /request/" + id + "/accept");
-        return friendReqService.acceptRequest(id);
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return friendReqService.acceptRequest(id, userId);
     }
 
     // tu choi loi moi ket ban
@@ -76,7 +80,7 @@ public class FriendReqController {
         );
     }
 
-    // huy loi moi ket ban
+    // xoa ket ban
     @DeleteMapping("/request/{id}")
     public void deleteRequest(@PathVariable String id) {
         log("DELETE /request/" + id);
