@@ -4,9 +4,12 @@ import com.example.modis.chat.message.dto.MessageDTO;
 import com.example.modis.chat.websocket.service.WebSocketMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,5 +28,13 @@ public class ChatWebSocketController {
         dto.setSenderId(senderId);
         // Call the service to handle message sending
         service.sendMessageToUser(dto);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getListMess(MessageDTO dto, SimpMessageHeaderAccessor headerAccessor) {
+        //at here I want to get list message between user and all user have conversation with user
+        String senderId = (String) headerAccessor.getSessionAttributes().get("userId");
+
+        return null;
     }
 }

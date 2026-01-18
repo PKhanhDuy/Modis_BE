@@ -39,6 +39,8 @@ public class WebSocketMessageService {
                 .content(dto.getContent())
                 .notificationType("MESSAGE")
                 .build();
+        log.info("Notification DTO: {}", notificationDTO);
         notificationProducer.sendNotification(notificationDTO);
     }
+
 }
