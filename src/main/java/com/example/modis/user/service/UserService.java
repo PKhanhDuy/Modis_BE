@@ -40,6 +40,24 @@ public class UserService {
     private Cloudinary cloudinary;
     private final PasswordEncoder passwordEncoder;
 
+    public List<UserResponse> searchUsers(String keyword, String currentUserId) {
+        return userRepository
+                .findByUsernameContainingIgnoreCaseOrFullnameContainingIgnoreCase(keyword, keyword)
+                .stream()
+                .filter(u -> !u.getId().toString().equals(currentUserId))
+                .map(u -> {
+                    UserResponse dto = new UserResponse();
+                    dto.setId(u.getId().toString());
+                    dto.setUsername(u.getUsername());
+                    dto.setFullname(u.getFullname());
+                    dto.setMail(u.getMail());
+                    dto.setSdt(u.getSdt());
+                    dto.setAvatarUrl(u.getAvatarUrl());
+                    return dto;
+                })
+                .toList();
+    }
+
     public User insert(User user) {
         log.info("Inserting user: {}", user.getUsername());
         return userRepository.insert(user);
@@ -67,6 +85,7 @@ public class UserService {
         String token = jwtTokenProvider.getSecretToken(user.getId());
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
+    
 
     public User registerNewUser(SignUpRequest signUpRequest){
         if ( checkUsernameExits(signUpRequest.getUsername())){
