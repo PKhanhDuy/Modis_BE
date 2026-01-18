@@ -18,4 +18,5 @@ public interface PostRepository extends MongoRepository<Post, String> {
 
     //Tìm danh sách post do chính mình gửi
     List<Post> findBySenderId(String senderId, Pageable pageable);
+
 }

@@ -47,7 +47,7 @@ public class FriendReqService {
 
             return new FriendResponse(
                     req.getId(),
-                    user.getId(),
+                    user.getId().toHexString(),
                     user.getUsername(),
                     user.getFullname()
             );
