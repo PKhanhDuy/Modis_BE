@@ -1,5 +1,6 @@
 package com.example.modis.friend.controller;
 
+import com.example.modis.friend.dto.FriendReqResponse;
 import com.example.modis.friend.dto.FriendResponse;
 import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.service.FriendReqService;
@@ -29,17 +30,19 @@ public class FriendReqController {
         return friendReqService.getFriends(userId);
     }
 
-    // received request
+
+    // received request (có senderName)
     @GetMapping("/requests/received")
-    public List<FriendReq> requestsReceived(@RequestParam String userId) {
-        return friendReqService.getReceivedRequests(userId);
+    public List<FriendReqResponse> requestsReceived(@RequestParam String userId) {
+        log("GET /requests/received userId=" + userId);
+        return friendReqService.getReceivedRequestsWithUser(userId);
     }
 
-    // sent request
+    // sent request (có receiverName)
     @GetMapping("/requests/sent")
-    public List<FriendReq> requestsSent(@RequestParam String userId) {
+    public List<FriendReqResponse> requestsSent(@RequestParam String userId) {
         log("GET /requests/sent userId=" + userId);
-        return friendReqService.getSentRequests(userId);
+        return friendReqService.getSentRequestsWithUser(userId);
     }
 
     // gui loi moi ket ban
