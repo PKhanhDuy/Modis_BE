@@ -32,7 +32,6 @@ public class FriendReqController {
     // received request
     @GetMapping("/requests/received")
     public List<FriendReq> requestsReceived(@RequestParam String userId) {
-        log("GET /requests/received userId=" + userId);
         return friendReqService.getReceivedRequests(userId);
     }
 
