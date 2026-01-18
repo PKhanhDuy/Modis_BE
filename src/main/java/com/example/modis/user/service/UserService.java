@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -85,10 +86,10 @@ public class UserService {
         String token = jwtTokenProvider.getSecretToken(user.getId());
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
-    
 
-    public User registerNewUser(SignUpRequest signUpRequest){
-        if ( checkUsernameExits(signUpRequest.getUsername())){
+
+    public User registerNewUser(SignUpRequest signUpRequest) {
+        if (checkUsernameExits(signUpRequest.getUsername())) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
         String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
@@ -105,10 +106,10 @@ public class UserService {
         System.out.println("Tai khoan user trước khi" + user.toString());
         return userRepository.save(user);
     }
-    
+
     public UserResponse getUser(String id) {
-    User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         // Chuyển đổi từ Entity sang DTO
         UserResponse userDTO = new UserResponse();
@@ -121,14 +122,14 @@ public class UserService {
         return userDTO;
     }
 
-    public boolean checkUsernameExits(String username){
+    public boolean checkUsernameExits(String username) {
         if (userRepository.findByUsername(username).isPresent()) {
             return true;
         }
         return false;
     }
 
-    public boolean checkPhoneExits(String phone){
+    public boolean checkPhoneExits(String phone) {
         if (userRepository.findBySdt(phone).isPresent()) {
             return true;
         }
@@ -143,7 +144,7 @@ public class UserService {
             throw new RuntimeException("Tên người dùng không hợp lệ");
         }
 
-        if ( checkUsernameExits(username)){
+        if (checkUsernameExits(username)) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
 
@@ -159,7 +160,7 @@ public class UserService {
             throw new RuntimeException("SDT không hợp lệ");
         }
 
-        if (checkPhoneExits(phone)){
+        if (checkPhoneExits(phone)) {
             throw new RuntimeException("SDT đã được sử dụng");
         }
 
@@ -175,7 +176,7 @@ public class UserService {
             throw new RuntimeException("SDT không hợp lệ");
         }
 
-        if (checkPhoneExits(mail)){
+        if (checkPhoneExits(mail)) {
             throw new RuntimeException("SDT đã được sử dụng");
         }
 
@@ -224,5 +225,22 @@ public class UserService {
         userRepository.save(user);
         log.info("Người dùng {} đã đổi mật khẩu thành công", user.getUsername());
         return userId;
+    }
+
+    public long countByRoleUser() {
+        return userRepository.countByRole(Role.USER);
+    }
+
+    public long countNewUsersToday() {
+        LocalDate today = LocalDate.now();
+
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(23, 59, 59);
+
+        return userRepository.countByRoleAndCreatedAtBetween(
+                Role.USER,
+                startOfDay,
+                endOfDay
+        );
     }
 }
