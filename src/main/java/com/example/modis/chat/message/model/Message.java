@@ -9,11 +9,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@Getter
-//@Setter
 public class Message {
     @Id
     private String messageId;
     private Participants participants;
     private Receiver receiver;
+
+    public static void main(String[] args) {
+        System.out.println("Hello World and Happy New Year 2026!");
+    }
+
 }

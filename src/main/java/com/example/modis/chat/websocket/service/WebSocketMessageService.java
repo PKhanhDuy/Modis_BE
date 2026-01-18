@@ -24,6 +24,7 @@ public class WebSocketMessageService {
         Message message = chatMessageMapper.toEntity(dto);
 
         Message savedMessage = messageService.save(message);
+        //???? convert saved entity to DTO
         MessageDTO responseDTO = chatMessageMapper.toDTO(savedMessage);
 
         //publish to redis topic
@@ -38,6 +39,8 @@ public class WebSocketMessageService {
                 .content(dto.getContent())
                 .notificationType("MESSAGE")
                 .build();
+        log.info("Notification DTO: {}", notificationDTO);
         notificationProducer.sendNotification(notificationDTO);
     }
+
 }
