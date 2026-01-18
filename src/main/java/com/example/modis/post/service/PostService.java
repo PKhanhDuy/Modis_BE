@@ -9,15 +9,22 @@ import com.example.modis.post.repository.PostRepository;
 import com.example.modis.user.model.User;
 import com.example.modis.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 import java.util.concurrent.TimeUnit;
@@ -31,6 +38,8 @@ public class PostService {
     @Qualifier("postRedisTemplate")
     private final RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
     private final UserRepository userRepository;
     private final Cloudinary cloudinary;
 
@@ -60,16 +69,12 @@ public class PostService {
             throw new IllegalArgumentException("Ảnh bài post không hợp lệ");
         }
 
-        // upload ảnh
-        String imageUrl = uploadPostImage(senderId, urlImage);
-//        String imageUrl = urlImage;
-
         // tạo post
         Post newPost = Post.builder()
                 .senderId(senderId)
                 .receivers(receivers)
                 .caption(caption)
-                .urlImage(imageUrl)
+                .urlImage(urlImage)
                 .created_at(new Date().toInstant())
                 .build();
 
@@ -90,37 +95,59 @@ public class PostService {
     public void deletePost(String id) {
         Post post = getPostById(id);
         postRepository.delete(post);
-
-        //Xóa post trong Cache redis
-        String redisKey = "post:detail:" + id;
-        redisTemplate.delete(redisKey);
     }
 
-    /* ================= IMAGE UPLOAD ================= */
+//    /* ================= IMAGE UPLOAD ================= */
+//
+//    private String uploadPostImage(String senderId, String image) {
+//
+//        try {
+//            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+//                    image.getBytes(),
+//                    ObjectUtils.asMap(
+//                            "folder", "Modis/posts/" + senderId,
+//                            "public_id", senderId + "_post",
+//                            "overwrite", true
+//                    )
+//            );
+//
+//            Object secureUrl = uploadResult.get("secure_url");
+//            if (secureUrl == null) {
+//                throw new RuntimeException("Cloudinary không trả về URL ảnh");
+//            }
+//
+//            return secureUrl.toString();
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException("Upload ảnh post thất bại", e);
+//        }
+//    }
 
-    private String uploadPostImage(String senderId, String image) {
 
-        try {
-            Map<?, ?> uploadResult = cloudinary.uploader().upload(
-                    image.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "Modis/posts/" + senderId,
-                            "public_id", senderId + "_post",
-                            "overwrite", true
-                    )
-            );
+    public PostResponse reactToPost(String postId, String receiverId, String icon) {
+        System.out.println("Post Id nafy laf "+ postId + " Vaf senderId la " + receiverId );
+        Query query = new Query(
+                Criteria.where("_id").is(new ObjectId(postId))
+                        .and("receivers.receiverId").is(receiverId)
+        );
 
-            Object secureUrl = uploadResult.get("secure_url");
-            if (secureUrl == null) {
-                throw new RuntimeException("Cloudinary không trả về URL ảnh");
-            }
+        Update update = new Update()
+                .set("receivers.$.icon", icon)
+                .set("receivers.$.timestamp", Instant.now());
 
-            return secureUrl.toString();
+        mongoTemplate.updateFirst(query, update, Post.class);
 
-        } catch (IOException e) {
-            throw new RuntimeException("Upload ảnh post thất bại", e);
-        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        Set<String> userIds = new HashSet<>();
+        userIds.add(post.getSenderId());
+        if(post.getReceivers() != null) post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
+        Map<String, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        return mapToFullDTO(post, userMap);
     }
+
     private PostResponse mapToFullDTO(Post post, Map<String, User> userMap) {
         User sender = userMap.getOrDefault(post.getSenderId(), null);
         String sName = (sender != null) ? sender.getFullname() : "Unknown"; // Hoặc getUsername tùy model
@@ -141,7 +168,7 @@ public class PostService {
         }
 
         return PostResponse.builder()
-                ._id(post.getId())
+                ._id(post.getId().toHexString())
                 .senderId(post.getSenderId())
                 .senderName(sName)
                 .senderAvatar(sAvatar)
@@ -154,7 +181,7 @@ public class PostService {
 
     public PostSimpleDTO mapToSimpleDTO(Post post){
         return PostSimpleDTO.builder()
-                .id(post.getId())
+                .id(post.getId().toHexString())
                 .urlImage(post.getUrlImage())
                 .created_at(post.getCreated_at())
                 .build();

@@ -1,14 +1,12 @@
 package com.example.modis.friend.service;
 
+import com.example.modis.friend.dto.FriendReqResponse;
 import com.example.modis.friend.dto.FriendResponse;
 import com.example.modis.friend.model.FriendReq;
 import com.example.modis.friend.repository.FriendReqRepository;
 import com.example.modis.user.model.User;
 import com.example.modis.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
-import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,10 +19,11 @@ import java.util.List;
 public class FriendReqService {
     private static final Logger log =
             LoggerFactory.getLogger(FriendReqService.class);
+
     private final FriendReqRepository friendReqRepository;
     private final UserRepository userRepository;
 
-    // danh sách bạn bè
+    // FRIEND LIST
     public List<FriendResponse> getFriends(String userId) {
 
         List<FriendReq> list =
@@ -35,11 +34,10 @@ public class FriendReqService {
 
         return list.stream().map(req -> {
 
-            // xác định ID người kia
             String friendId = req.getSenderId().equals(userId)
                     ? req.getReceiverId()
                     : req.getSenderId();
-            log.info("Da lay duoc friendId la " +friendId);
+
             User user = userRepository.findById(friendId)
                     .orElseThrow(() ->
                             new RuntimeException("User not found: " + friendId)
@@ -47,7 +45,7 @@ public class FriendReqService {
 
             return new FriendResponse(
                     req.getId(),
-                    user.getId(),
+                    user.getId().toString(),
                     user.getUsername(),
                     user.getFullname()
             );
@@ -55,24 +53,58 @@ public class FriendReqService {
         }).toList();
     }
 
-    //  received friend requests
-    public List<FriendReq> getReceivedRequests(String userId) {
-        return friendReqRepository.findByReceiverIdAndStatus(userId, "pending");
+    // RECEIVED REQUESTS
+    public List<FriendReqResponse> getReceivedRequestsWithUser(String userId) {
+
+        List<FriendReq> list =
+                friendReqRepository.findByReceiverIdAndStatus(userId, "pending");
+
+        return list.stream().map(req -> {
+
+            User sender = userRepository.findById(req.getSenderId())
+                    .orElse(null);
+
+            return new FriendReqResponse(
+                    req.getId(),
+                    req.getSenderId(),
+                    sender != null ? sender.getFullname() : null,
+                    req.getReceiverId(),
+                    null,
+                    req.getStatus(),
+                    req.getTimestamp()
+            );
+        }).toList();
     }
 
-    // sent requests
-    public List<FriendReq> getSentRequests(String userId) {
-        return friendReqRepository.findBySenderIdAndStatus(userId, "pending");
+    // SENT REQUESTS
+    public List<FriendReqResponse> getSentRequestsWithUser(String userId) {
+
+        List<FriendReq> list =
+                friendReqRepository.findBySenderIdAndStatus(userId, "pending");
+
+        return list.stream().map(req -> {
+
+            User receiver = userRepository.findById(req.getReceiverId())
+                    .orElse(null);
+
+            return new FriendReqResponse(
+                    req.getId(),
+                    req.getSenderId(),
+                    null,
+                    req.getReceiverId(),
+                    receiver != null ? receiver.getFullname() : null,
+                    req.getStatus(),
+                    req.getTimestamp()
+            );
+        }).toList();
     }
 
-    // gui loi moi ket ban
+    // SEND REQUEST
     public FriendReq sendRequest(String senderId, String receiverId) {
 
         if (senderId.equals(receiverId)) {
             throw new RuntimeException("Cannot send friend request to yourself");
         }
-
-        // chặn gửi trùng 2 chiều
         if (friendReqRepository.existsBySenderIdAndReceiverId(senderId, receiverId)
                 || friendReqRepository.existsBySenderIdAndReceiverId(receiverId, senderId)) {
             throw new RuntimeException("Friend request already exists");
@@ -87,21 +119,45 @@ public class FriendReqService {
         return friendReqRepository.save(friendReq);
     }
 
-    //    chap nhan loi moi ket ban
-    public FriendReq acceptRequest(String id) {
-        FriendReq friendReq = friendReqRepository.findById(id).orElseThrow(() -> new RuntimeException("Friend request not found"));
+    // ACCEPT
+    public FriendReq acceptRequest(String id, String userId) {
+        log.info("Accept request id={} by userId={}", id, userId);
+
+        FriendReq friendReq = friendReqRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+
+        if (!friendReq.getReceiverId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền chấp nhận lời mời này");
+        }
+
+        if (!"pending".equals(friendReq.getStatus())) {
+            throw new RuntimeException("Lời mời đã được xử lý");
+        }
+
         friendReq.setStatus("accepted");
         return friendReqRepository.save(friendReq);
     }
 
-    //    tu choi loi moi ket ban
+    // REJECT
     public FriendReq rejectRequest(String id) {
-        FriendReq friendReq = friendReqRepository.findById(id).orElseThrow(() -> new RuntimeException("Friend request not found"));
+        FriendReq friendReq = friendReqRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Friend request not found"));
         friendReq.setStatus("rejected");
         return friendReqRepository.save(friendReq);
     }
 
-    //    huy loi moi ket ban
+    public String getFriendStatus(String userId, String otherUserId) {
+        FriendReq req = friendReqRepository
+                .findBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
+                        userId, otherUserId,
+                        otherUserId, userId
+                );
+
+        if (req == null) return "none";
+        return req.getStatus();
+    }
+
+    // DELETE
     public void deleteRequest(String id) {
         friendReqRepository.deleteById(id);
     }

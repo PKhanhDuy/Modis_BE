@@ -13,9 +13,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostRequest {
+public class ReactCaptionRequest {
+    private String postId;
     private String senderId;
-    private List<Receiver> receivers;
-    private String caption;
-    private String urlImage;
+    private String reaction;
 }

@@ -13,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostDto {
-    private String _id;
     private String senderId;
     private List<Receiver> receivers;
     private String caption;
