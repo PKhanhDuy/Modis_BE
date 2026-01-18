@@ -31,7 +31,7 @@ public class ListMessService {
                 )),
 
                 // --- BƯỚC 2: Sắp xếp mới nhất lên đầu ---
-                sort(Sort.Direction.DESC, "timestamp"),
+                sort(Sort.Direction.DESC, "receiver.timestamp"),
 
                 // --- BƯỚC 3: Xác định ID đối phương và lấy thông tin message ---
                 project()
