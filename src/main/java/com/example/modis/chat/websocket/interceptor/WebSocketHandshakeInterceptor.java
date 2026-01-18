@@ -8,6 +8,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 
@@ -28,7 +29,13 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         String query = request.getURI().getQuery();
-        String token = extractTokenFromQuery(query);
+//        String token = extractTokenFromQuery(query);
+        String token = UriComponentsBuilder
+                .fromUri(request.getURI())
+                .build()
+                .getQueryParams()
+                .getFirst("token");
+        log.info("token" + token);
         if (token == null) {
             log.warn("WebSocket handshake failed: token not found");
             return false;
@@ -42,6 +49,7 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
         String userId = jwtTokenProvider.getUserId(token);
+        log.info("userId in handshake interceptor:" + userId);
         System.out.println("userId in handshake interceptor: " + userId);
         attributes.put("userId", userId);
         log.info("WebSocket handshake successful for userId: {}", userId);
