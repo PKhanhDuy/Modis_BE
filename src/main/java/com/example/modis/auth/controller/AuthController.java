@@ -52,7 +52,7 @@ public class AuthController {
             return ResponseEntity.ok(new SignupResponse(token, user.getId(), user.getUsername()));
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
+            error.put("message", e.getMessage()); 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
