@@ -12,7 +12,7 @@ public class PostFilterRequest {
 
     // Các tham số phân trang
     private int page = 0;               // Mặc định trang 0
-    private int size = 50;              // Mặc định 50 bài/trang
+    private int size =50;              // Mặc định 50 bài/trang
 
     public String toRedisKey() {
         return String.format("posts:%s:%s:%s:%s:%d:%d",

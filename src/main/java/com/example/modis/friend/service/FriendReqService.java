@@ -47,7 +47,7 @@ public class FriendReqService {
 
             return new FriendResponse(
                     req.getId(),
-                    user.getId().toHexString(),
+                    user.getId(),
                     user.getUsername(),
                     user.getFullname()
             );
@@ -88,7 +88,7 @@ public class FriendReqService {
     }
 
     //    chap nhan loi moi ket ban
-    public FriendReq acceptRequest(String id) {
+    public FriendReq acceptRequest(String id, String userId) {
         FriendReq friendReq = friendReqRepository.findById(id).orElseThrow(() -> new RuntimeException("Friend request not found"));
         friendReq.setStatus("accepted");
         return friendReqRepository.save(friendReq);
@@ -104,5 +104,16 @@ public class FriendReqService {
     //    huy loi moi ket ban
     public void deleteRequest(String id) {
         friendReqRepository.deleteById(id);
+    }
+
+    public String getFriendStatus(String userId, String otherUserId) {
+        FriendReq req = friendReqRepository
+                .findBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
+                        userId, otherUserId,
+                        otherUserId, userId
+                );
+
+        if (req == null) return "none";
+        return req.getStatus(); // pending | accepted | rejected
     }
 }

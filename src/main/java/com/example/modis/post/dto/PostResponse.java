@@ -15,9 +15,11 @@ import java.util.List;
 @AllArgsConstructor
 public class PostResponse {
     @Id
-    private String id;
+    private String _id;
     private String senderId;
-    private List<Receiver> receivers;
+    private String senderName;
+    private String senderAvatar;
+    private List<ReceiverDTO> receivers;
     private String caption;
     private String urlImage;
     private Instant created_at;

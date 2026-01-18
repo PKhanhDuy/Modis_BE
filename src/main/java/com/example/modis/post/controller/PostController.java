@@ -3,6 +3,7 @@ package com.example.modis.post.controller;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.modis.post.dto.*;
+import com.example.modis.post.dto.PostFilterRequest;
 import com.example.modis.post.model.Post;
 import com.example.modis.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("api/posts")
 @RequiredArgsConstructor
 public class PostController {
 
@@ -37,13 +38,24 @@ public class PostController {
         System.out.println("Da nhan duoc post moi");
         return ResponseEntity.ok(postDto);
     }
+    @GetMapping("/user/{userId}")
+    public CompletableFuture<ResponseEntity<List<Post>>> getPostByUserId(@PathVariable String userId){
+        return null;
+    }
+
+    @GetMapping("/pair")
+    public CompletableFuture<ResponseEntity<List<Post>>> getPostBySenderIdAndReceiverId(@RequestParam String senderId, @RequestParam String receiverId){
+        return null;
+    }
+
+    @GetMapping("/save")
+    public CompletableFuture<ResponseEntity<Post>> savePost(@RequestBody Post post){
+        return null;
+    }
 
     @DeleteMapping("/delete/{postId}")
-    public ResponseEntity<Void> deletePostById(
-            @PathVariable String postId
-    ) {
-        postService.deletePost(postId);
-        return ResponseEntity.noContent().build();
+    public CompletableFuture<ResponseEntity<Map<String, String>>> deletePostById(@PathVariable String postId){
+        return null;
     }
     @PutMapping("/react")
     public ResponseEntity<PostResponse> updatePost(
