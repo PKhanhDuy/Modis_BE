@@ -111,7 +111,7 @@ public class UserController {
                         "data", Map.of(
                                 "message", userId
                         )
-                )
+                )   
         );
 
     }

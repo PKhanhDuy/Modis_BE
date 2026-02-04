@@ -168,7 +168,7 @@ public class PostService {
         }
 
         return PostResponse.builder()
-                ._id(post.getId().toHexString())
+                .id(post.getId().toHexString())
                 .senderId(post.getSenderId())
                 .senderName(sName)
                 .senderAvatar(sAvatar)

@@ -1,5 +1,6 @@
 package com.example.modis.post.dto;
 import com.example.modis.post.model.Receiver;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 public class PostResponse {
     @Id
-    private String _id;
+    @JsonProperty("_id")
+    private String id;
     private String senderId;
     private String senderName;
     private String senderAvatar;
