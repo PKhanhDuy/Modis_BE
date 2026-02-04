@@ -1,4 +1,4 @@
-package com.example.modis.admin.DTO;
+package com.example.modis.admin.dto;
 
 import com.example.modis.user.enumm.Role;
 import com.example.modis.user.enumm.Status;

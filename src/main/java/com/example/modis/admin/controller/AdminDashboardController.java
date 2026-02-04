@@ -50,16 +50,13 @@ public class AdminDashboardController {
     public ResponseEntity<?> engagement() {
         long onlineUsers = userActivityService.countOnlineUsers();
         long totalUsers = userService.countByRoleUser();
-
         int percent = totalUsers == 0
                 ? 0
                 : (int) Math.round((onlineUsers * 100.0) / totalUsers);
-
         String status;
         if (percent >= 70) status = "Cao";
         else if (percent >= 40) status = "Trung bình";
         else status = "Thấp";
-
         return ResponseEntity.ok(new EngagementResponse(percent, status));
     }
 }

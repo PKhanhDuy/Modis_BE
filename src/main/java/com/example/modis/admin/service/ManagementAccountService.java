@@ -1,22 +1,15 @@
 package com.example.modis.admin.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
+import com.example.modis.admin.dto.UserRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.example.modis.admin.DTO.UserRequestDTO;
 import com.example.modis.auth.dto.LoginRequest;
 import com.example.modis.auth.dto.LoginResponse;
 import com.example.modis.security.jwt.JwtTokenProvider;
@@ -24,46 +17,40 @@ import com.example.modis.user.enumm.Role;
 import com.example.modis.user.enumm.Status;
 import com.example.modis.user.model.User;
 import com.example.modis.user.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ManagementAccountService {
-
     private final PasswordEncoder passwordEncoder;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private Cloudinary cloudinary;
-    private JwtTokenProvider jwtTokenProvider;
-
+    private final JwtTokenProvider jwtTokenProvider;
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-     public User deleteUser(String userId) {
+    public User deleteUser(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         user.setIsActive(Status.INACTIVE);
         return userRepository.save(user);
-    } 
- 
+    }
+
     public User updateRole(String userId, Role role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        if ( user.getRole() != role){
+        if (user.getRole() != role) {
             user.setRole(role);
             return userRepository.save(user);
         }
         return user;
     }
 
-     public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
@@ -76,33 +63,29 @@ public class ManagementAccountService {
             throw new RuntimeException("Tài khoản đã bị khóa!");
         }
         String token = jwtTokenProvider.getSecretToken(user.getId());
+
         System.out.println(token);
         System.out.println("Đã đăng nhập thành công");
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
+
     public User updateUser(String id, UserRequestDTO dto, MultipartFile file) throws Exception {
-        // 1. Tìm user - dùng ID từ PathVariable
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Không tìm thấy người dùng với ID: " + id));
-
-        // 2. Cập nhật các thông tin text cơ bản
         user.setFullname(dto.getFullname());
         user.setSdt(dto.getSdt());
         user.setMail(dto.getMail());
         user.setRole(dto.getRole());
         user.setIsActive(dto.getIsActive());
-
-        // 3. Xử lý upload ảnh (Chỉ thực hiện nếu có file mới được gửi lên)
         if (file != null && !file.isEmpty()) {
             try {
                 Map options = ObjectUtils.asMap(
-                    "folder", "Modis",
-                    "resource_type", "auto"
+                        "folder", "Modis",
+                        "resource_type", "auto"
                 );
 
                 Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
                 String secureUrl = (String) uploadResult.get("secure_url");
-
                 if (secureUrl != null) {
                     user.setAvatarUrl(secureUrl);
                 } else {
@@ -113,8 +96,6 @@ public class ManagementAccountService {
                 throw new RuntimeException("Không thể xử lý file ảnh");
             }
         }
-
-        // 4. Lưu lại toàn bộ thay đổi
         return userRepository.save(user);
     }
 }

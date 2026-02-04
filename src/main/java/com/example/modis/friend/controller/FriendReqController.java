@@ -16,36 +16,30 @@ import java.util.Map;
 @RequestMapping("/api/friends")
 @RequiredArgsConstructor
 public class FriendReqController {
-
     private final FriendReqService friendReqService;
 
     private void log(String msg) {
         System.out.println(" [FriendController] " + msg);
     }
 
-    // danh sach ban be
     @GetMapping("/list")
     public List<FriendResponse> friends(@RequestParam String userId) {
         log("GET /list userId=" + userId);
         return friendReqService.getFriends(userId);
     }
 
-
-    // received request (có senderName)
     @GetMapping("/requests/received")
     public List<FriendReqResponse> requestsReceived(@RequestParam String userId) {
         log("GET /requests/received userId=" + userId);
         return friendReqService.getReceivedRequestsWithUser(userId);
     }
 
-    // sent request (có receiverName)
     @GetMapping("/requests/sent")
     public List<FriendReqResponse> requestsSent(@RequestParam String userId) {
         log("GET /requests/sent userId=" + userId);
         return friendReqService.getSentRequestsWithUser(userId);
     }
 
-    // gui loi moi ket ban
     @PostMapping("/request")
     public FriendReq sendRequest(@RequestParam String senderId,
                                  @RequestParam String receiverId) {
@@ -53,17 +47,14 @@ public class FriendReqController {
         return friendReqService.sendRequest(senderId, receiverId);
     }
 
-    //chap nhan
     @PutMapping("/request/{id}/accept")
     public FriendReq acceptRequest(@PathVariable String id) {
         String userId = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
-
         return friendReqService.acceptRequest(id, userId);
     }
 
-    // tu choi loi moi ket ban
     @PutMapping("/request/{id}/reject")
     public FriendReq rejectRequest(@PathVariable String id) {
         log("PUT /request/" + id + "/reject");
@@ -82,7 +73,6 @@ public class FriendReqController {
         );
     }
 
-    // xoa ket ban
     @DeleteMapping("/request/{id}")
     public void deleteRequest(@PathVariable String id) {
         log("DELETE /request/" + id);

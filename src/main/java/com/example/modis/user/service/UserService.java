@@ -31,21 +31,19 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
+
     @Autowired
     private final UserRepository userRepository;
-
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
     @Autowired
     private Cloudinary cloudinary;
     private final PasswordEncoder passwordEncoder;
-
     public List<UserResponse> searchUsers(String keyword, String currentUserId) {
         return userRepository
                 .findByUsernameContainingIgnoreCaseOrFullnameContainingIgnoreCase(keyword, keyword)
                 .stream()
-                .filter(u -> !u.getId().toString().equals(currentUserId))
+                .filter(u -> !u.getId().toString().equals(currentUserId)) // không trả về chính mình
                 .map(u -> {
                     UserResponse dto = new UserResponse();
                     dto.setId(u.getId().toString());
@@ -58,25 +56,22 @@ public class UserService {
                 })
                 .toList();
     }
-
     public User insert(User user) {
         log.info("Inserting user: {}", user.getUsername());
         return userRepository.insert(user);
     }
-
     public List<User> findAll() {
         log.info("Finding all users");
         return userRepository.findAll();
     }
-
     public User getUserById(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với id: " + id));
     }
-
     public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại!"));
+
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Mật khẩu không chính xác!");
         }
@@ -84,15 +79,16 @@ public class UserService {
             throw new RuntimeException("Tài khoản đã bị khóa!");
         }
         String token = jwtTokenProvider.getSecretToken(user.getId());
+
         return new LoginResponse(token, user.getId(), user.getUsername());
     }
-
-
     public User registerNewUser(SignUpRequest signUpRequest) {
         if (checkUsernameExits(signUpRequest.getUsername())) {
             throw new RuntimeException("Tên đăng nhập đã tồn tại!");
         }
+
         String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
+
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(encodedPassword);
@@ -103,15 +99,14 @@ public class UserService {
         user.setRole(Role.USER);
         user.setIsActive(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
+
         System.out.println("Tai khoan user trước khi" + user.toString());
         return userRepository.save(user);
     }
-
     public UserResponse getUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-        // Chuyển đổi từ Entity sang DTO
         UserResponse userDTO = new UserResponse();
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
@@ -123,19 +118,11 @@ public class UserService {
     }
 
     public boolean checkUsernameExits(String username) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            return true;
-        }
-        return false;
+        return userRepository.findByUsername(username).isPresent();
     }
-
     public boolean checkPhoneExits(String phone) {
-        if (userRepository.findBySdt(phone).isPresent()) {
-            return true;
-        }
-        return false;
+        return userRepository.findBySdt(phone).isPresent();
     }
-
     public User updateUsername(String userId, String username) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
@@ -167,23 +154,21 @@ public class UserService {
         user.setSdt(phone.trim());
         return userRepository.save(user);
     }
-
     public User updateMail(String userId, String mail) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         if (mail == null || mail.trim().isEmpty()) {
-            throw new RuntimeException("SDT không hợp lệ");
+            throw new RuntimeException("Mail không hợp lệ");
         }
 
         if (checkPhoneExits(mail)) {
-            throw new RuntimeException("SDT đã được sử dụng");
+            throw new RuntimeException("Mail đã được sử dụng");
         }
 
         user.setMail(mail.trim());
         return userRepository.save(user);
     }
-
     public String updateAvatar(String id, MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
@@ -191,7 +176,6 @@ public class UserService {
             }
 
             Map options = ObjectUtils.asMap("folder", "Modis");
-
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
             String secureUrl = (String) uploadResult.get("secure_url");
 
@@ -211,26 +195,27 @@ public class UserService {
             throw new RuntimeException("Lỗi hệ thống khi upload ảnh");
         }
     }
-
     public String changePassword(String userId, String oldPass, String newPass) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
         if (!passwordEncoder.matches(oldPass, user.getPassword())) {
             throw new RuntimeException("Mật khẩu cũ không chính xác!");
         }
+
         if (passwordEncoder.matches(newPass, user.getPassword())) {
             throw new RuntimeException("Mật khẩu mới không được giống mật khẩu cũ!");
         }
+
         user.setPassword(passwordEncoder.encode(newPass));
         userRepository.save(user);
+
         log.info("Người dùng {} đã đổi mật khẩu thành công", user.getUsername());
         return userId;
     }
-
     public long countByRoleUser() {
         return userRepository.countByRole(Role.USER);
     }
-
     public long countNewUsersToday() {
         LocalDate today = LocalDate.now();
 
