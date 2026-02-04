@@ -82,7 +82,7 @@ public class FriendReqService {
                     null,
                     req.getReceiverId(),
                     receiver != null ? receiver.getFullname() : null,
-                    receiver != null ? receiver.getAvatarUrl() : null, // ✅
+                    receiver != null ? receiver.getAvatarUrl() : null,
                     req.getStatus(),
                     req.getTimestamp()
             );
