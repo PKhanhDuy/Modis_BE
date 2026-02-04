@@ -11,4 +11,5 @@ public class FriendResponse {
     private String userId;
     private String username;
     private String fullname;
+    private String avatarUrl;
 }

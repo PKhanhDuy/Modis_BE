@@ -40,7 +40,8 @@ public class FriendReqService {
                     req.getId(),                 // id của request
                     user.getId().toString(),     // id người bạn
                     user.getUsername(),          // username người bạn
-                    user.getFullname()           // fullname người bạn
+                    user.getFullname(),
+                    user.getAvatarUrl()       // fullname người bạn
             );
 
         }).toList();
@@ -49,36 +50,41 @@ public class FriendReqService {
     public List<FriendReqResponse> getReceivedRequestsWithUser(String userId) {
         List<FriendReq> list =
                 friendReqRepository.findByReceiverIdAndStatus(userId, "pending");
+
         return list.stream().map(req -> {
-            User sender = userRepository.findById(req.getSenderId())
-                    .orElse(null);
+            User sender = userRepository.findById(req.getSenderId()).orElse(null);
+
             return new FriendReqResponse(
-                    req.getId(),                         // id request
-                    req.getSenderId(),                   // id người gửi
-                    sender != null ? sender.getFullname() : null, // tên người gửi
-                    req.getReceiverId(),                 // id người nhận
-                    null,                                // receiverName không cần
-                    req.getStatus(),                     // pending
-                    req.getTimestamp()                   // thời gian gửi
+                    req.getId(),
+                    req.getSenderId(),
+                    sender != null ? sender.getFullname() : null,
+                    sender != null ? sender.getAvatarUrl() : null,   // ✅
+                    req.getReceiverId(),
+                    null,
+                    null,
+                    req.getStatus(),
+                    req.getTimestamp()
             );
         }).toList();
     }
 
     public List<FriendReqResponse> getSentRequestsWithUser(String userId) {
-
         List<FriendReq> list =
                 friendReqRepository.findBySenderIdAndStatus(userId, "pending");
+
         return list.stream().map(req -> {
-            User receiver = userRepository.findById(req.getReceiverId())
-                    .orElse(null);
+            User receiver = userRepository.findById(req.getReceiverId()).orElse(null);
+
             return new FriendReqResponse(
-                    req.getId(),                         // id request
-                    req.getSenderId(),                   // id người gửi
-                    null,                                // senderName không cần
-                    req.getReceiverId(),                 // id người nhận
-                    receiver != null ? receiver.getFullname() : null, // tên người nhận
-                    req.getStatus(),                     // pending
-                    req.getTimestamp()                   // thời gian gửi
+                    req.getId(),
+                    req.getSenderId(),
+                    null,
+                    null,
+                    req.getReceiverId(),
+                    receiver != null ? receiver.getFullname() : null,
+                    receiver != null ? receiver.getAvatarUrl() : null, // ✅
+                    req.getStatus(),
+                    req.getTimestamp()
             );
         }).toList();
     }
