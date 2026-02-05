@@ -2,7 +2,7 @@ package com.example.modis.chat.websocket.interceptor;
 
 import com.example.modis.security.jwt.JwtTokenProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
