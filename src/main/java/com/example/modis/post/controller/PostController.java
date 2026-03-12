@@ -26,43 +26,45 @@ public class PostController {
     private final Cloudinary cloudinary;
 
     @PostMapping("/create")
-    public ResponseEntity<PostDto> createPost(
-            @RequestBody PostRequest request
-    ) {
-        PostDto postDto = postService.createPost(
+    public ResponseEntity<PostResponse> createPost(@RequestBody PostRequest request) {
+        PostResponse postDto = postService.createPostFull(
                 request.getSenderId(),
                 request.getReceivers(),
                 request.getCaption(),
                 request.getUrlImage()
         );
-        System.out.println("Da nhan duoc post moi");
         return ResponseEntity.ok(postDto);
     }
+
     @GetMapping("/user/{userId}")
-    public CompletableFuture<ResponseEntity<List<Post>>> getPostByUserId(@PathVariable String userId){
+    public CompletableFuture<ResponseEntity<List<Post>>> getPostByUserId(@PathVariable String userId) {
         return null;
     }
 
     @GetMapping("/pair")
-    public CompletableFuture<ResponseEntity<List<Post>>> getPostBySenderIdAndReceiverId(@RequestParam String senderId, @RequestParam String receiverId){
+    public CompletableFuture<ResponseEntity<List<Post>>> getPostBySenderIdAndReceiverId(@RequestParam String senderId, @RequestParam String receiverId) {
         return null;
     }
 
     @GetMapping("/save")
-    public CompletableFuture<ResponseEntity<Post>> savePost(@RequestBody Post post){
+    public CompletableFuture<ResponseEntity<Post>> savePost(@RequestBody Post post) {
         return null;
     }
 
     @DeleteMapping("/delete/{postId}")
-    public CompletableFuture<ResponseEntity<Map<String, String>>> deletePostById(@PathVariable String postId){
+    public CompletableFuture<ResponseEntity<Map<String, String>>> deletePostById(@PathVariable String postId) {
         return null;
     }
+
     @PutMapping("/react")
     public ResponseEntity<PostResponse> updatePost(
             @RequestBody ReactCaptionRequest request
     ) {
-        System.out.println("Da nhan duoc react request");
-        PostResponse updated = postService.reactToPost(request.getPostId(), request.getSenderId(), request.getReaction());
+        PostResponse updated = postService.reactToPost(
+                request.getPostId(),
+                request.getSenderId(),
+                request.getReaction()
+        );
         return ResponseEntity.ok(updated);
     }
 

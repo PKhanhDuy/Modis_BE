@@ -79,7 +79,7 @@ public class PostService {
                 .build();
 
         Post post = postRepository.save((newPost));
-
+        clearPostCache();
         return toDTO(post);
     }
 
@@ -97,7 +97,7 @@ public class PostService {
         postRepository.delete(post);
     }
 
-//    /* ================= IMAGE UPLOAD ================= */
+    //    /* ================= IMAGE UPLOAD ================= */
 //
 //    private String uploadPostImage(String senderId, String image) {
 //
@@ -122,10 +122,39 @@ public class PostService {
 //            throw new RuntimeException("Upload ảnh post thất bại", e);
 //        }
 //    }
+    public PostResponse createPostFull(
+            String senderId,
+            List<Receiver> receivers,
+            String caption,
+            String urlImage
+    ) {
+        userRepository.findById(senderId)
+                .orElseThrow(() -> new RuntimeException("Người gửi không tồn tại"));
+
+        Post newPost = Post.builder()
+                .senderId(senderId)
+                .receivers(receivers)
+                .caption(caption)
+                .urlImage(urlImage)
+                .created_at(new Date().toInstant())
+                .build();
+
+        Post saved = postRepository.save(newPost);
+        clearPostCache();
+
+        Set<String> userIds = new HashSet<>();
+        userIds.add(senderId);
+        receivers.forEach(r -> userIds.add(r.getReceiverId()));
+
+        Map<String, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        return mapToFullDTO(saved, userMap);
+    }
 
 
     public PostResponse reactToPost(String postId, String receiverId, String icon) {
-        System.out.println("Post Id nafy laf "+ postId + " Vaf senderId la " + receiverId );
+
         Query query = new Query(
                 Criteria.where("_id").is(new ObjectId(postId))
                         .and("receivers.receiverId").is(receiverId)
@@ -136,15 +165,19 @@ public class PostService {
                 .set("receivers.$.timestamp", Instant.now());
 
         mongoTemplate.updateFirst(query, update, Post.class);
+        clearPostCache();
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         Set<String> userIds = new HashSet<>();
         userIds.add(post.getSenderId());
-        if(post.getReceivers() != null) post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
+        if (post.getReceivers() != null)
+            post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
+
         Map<String, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
+
         return mapToFullDTO(post, userMap);
     }
 
@@ -179,7 +212,7 @@ public class PostService {
                 .build();
     }
 
-    public PostSimpleDTO mapToSimpleDTO(Post post){
+    public PostSimpleDTO mapToSimpleDTO(Post post) {
         return PostSimpleDTO.builder()
                 .id(post.getId().toHexString())
                 .urlImage(post.getUrlImage())
@@ -196,14 +229,32 @@ public class PostService {
     //Type: Chế độ lọc ảnh (gồm Mine: tôi, FROM_SENDER: lọc từ người gửi khác, ALL: tất cả)
     //ViewMode: chế độ xem (gồm LIST: xem ở trang chủ, GRID: xem ở trang AllImage
     public List<?> filterAndMapPosts(PostFilterRequest request) {
-        //Check Redis
-        String redisKey = request.toRedisKey();
-        List<?> cachedData = (List<?>) redisTemplate.opsForValue().get(redisKey);
 
+        String redisKey = request.toRedisKey();
+
+        // Feed chính (page 0) luôn lấy từ DB để thấy post mới ngay
+        if (request.getPage() == 0) {
+            System.out.println("LOG: Page 0 -> bypass Redis");
+            return fetchPostsFromDB(request);
+        }
+
+        // check redis
+        List<?> cachedData = (List<?>) redisTemplate.opsForValue().get(redisKey);
         if (cachedData != null) {
             System.out.println("LOG: Lấy dữ liệu từ Redis");
             return cachedData;
         }
+
+        List<?> result = fetchPostsFromDB(request);
+
+        if (result != null && !result.isEmpty()) {
+            redisTemplate.opsForValue().set(redisKey, result, 15, TimeUnit.MINUTES);
+            System.out.println("LOG: Lưu vào Redis thành công");
+        }
+        return result;
+    }
+
+    private List<?> fetchPostsFromDB(PostFilterRequest request) {
 
         Pageable pageable = PageRequest.of(
                 request.getPage(),
@@ -211,7 +262,6 @@ public class PostService {
                 Sort.by(Sort.Direction.DESC, "created_at")
         );
 
-        List<Post> rawPosts;
         Page<Post> pageResult;
 
         switch (request.getType()) {
@@ -219,48 +269,42 @@ public class PostService {
                 pageResult = postRepository.findBySenderId(request.getUserId(), pageable);
                 break;
             case "FROM_SENDER":
-                pageResult = postRepository.findPostsForMeFromSender(request.getUserId(), request.getSenderId(), pageable);
+                pageResult = postRepository.findPostsForMeFromSender(
+                        request.getUserId(),
+                        request.getSenderId(),
+                        pageable
+                );
                 break;
             default:
-                pageResult = postRepository.findAllRelatedPosts(request.getUserId(), pageable);
+                pageResult = postRepository.findAllRelatedPosts(
+                        request.getUserId(),
+                        pageable
+                );
                 break;
         }
-        rawPosts = pageResult.getContent();
 
-        //Map sang DTO
-        List<?> result;
+        List<Post> rawPosts = pageResult.getContent();
+
         if ("GRID".equalsIgnoreCase(request.getViewMode())) {
-            result = convertList(rawPosts, this::mapToSimpleDTO);
-        } else {
-            if (rawPosts.isEmpty()) {
-                result = new ArrayList<>();
-            } else {
-                Set<String> userIds = new HashSet<>();
-                for (Post post : rawPosts) {
-                    userIds.add(post.getSenderId());
-                    if (post.getReceivers() != null) {
-                        post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
-                    }
-                }
+            return rawPosts.stream()
+                    .map(this::mapToSimpleDTO)
+                    .toList();
+        }
 
-                // b. Query UserMap (Key: ID, Value: User)
-                Map<String, User> userMap = userRepository.findAllById(userIds).stream()
-                        .collect(Collectors.toMap(User::getId, Function.identity()));
-
-                // c. Map Post -> PostResponse (Full Info)
-                result = rawPosts.stream()
-                        .map(post -> mapToFullDTO(post, userMap))
-                        .collect(Collectors.toList());
+        Set<String> userIds = new HashSet<>();
+        for (Post post : rawPosts) {
+            userIds.add(post.getSenderId());
+            if (post.getReceivers() != null) {
+                post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
             }
         }
 
-        //Lưu vào Redis
-        if (!result.isEmpty()) {
-            redisTemplate.opsForValue().set(redisKey, result, 15, TimeUnit.MINUTES);
-            System.out.println("LOG: Lưu vào Redis thành công");
-        }
+        Map<String, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        return result;
+        return rawPosts.stream()
+                .map(post -> mapToFullDTO(post, userMap))
+                .toList();
     }
 
     //GET POST DETAIL WITH REDIS
@@ -275,7 +319,7 @@ public class PostService {
         Post post = getPostById(id);
         Set<String> userIds = new HashSet<>();
         userIds.add(post.getSenderId());
-        if(post.getReceivers() != null) post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
+        if (post.getReceivers() != null) post.getReceivers().forEach(r -> userIds.add(r.getReceiverId()));
 
         Map<String, User> userMap = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
@@ -284,5 +328,19 @@ public class PostService {
         //Lưu post này vào Redis
         redisTemplate.opsForValue().set(redisKey, response, 10, TimeUnit.MINUTES);
         return response;
+    }
+
+    private void clearPostCache() {
+        Set<String> filterKeys = redisTemplate.keys("post:filter:*");
+        if (filterKeys != null && !filterKeys.isEmpty()) {
+            redisTemplate.delete(filterKeys);
+        }
+
+        Set<String> detailKeys = redisTemplate.keys("post:detail:*");
+        if (detailKeys != null && !detailKeys.isEmpty()) {
+            redisTemplate.delete(detailKeys);
+        }
+
+        System.out.println("LOG: Cleared all post caches");
     }
 }
